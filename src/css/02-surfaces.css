@@ -1,0 +1,92 @@
+/* slightly rounded buttons, structural surfaces stay square */
+.pad,.pad.hold{border-radius:6px}
+.chip,select{border-radius:5px}
+.seg{border-radius:7px}
+.seg::before,.seg button{border-radius:5px}
+.brand{border-radius:5px}
+input[type=range]::-webkit-slider-thumb{border-radius:3px}
+input[type=range]::-moz-range-thumb{border-radius:3px}
+.bk{border-radius:0 0 3px 3px}
+
+/* glass and metal: dark anodized body, one glass sheet over display and volume with a reflection that follows the pointer */
+@property --gx{syntax:'<percentage>';inherits:true;initial-value:28%}
+@property --gy{syntax:'<percentage>';inherits:true;initial-value:-6%}
+.app{position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 -2px 0 rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.04),0 24px 40px -8px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.05)}
+.app::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,255,255,.022) 0 1px,transparent 1px 3px)}
+.app::after{content:"";position:absolute;inset:4px;pointer-events:none;border:1px solid rgba(255,255,255,.07);border-right-color:rgba(0,0,0,.4);border-bottom-color:rgba(0,0,0,.55)}
+.app>*{position:relative;z-index:1}
+.tele{position:relative;padding:8px;background:linear-gradient(#0C0D0E,#151618);border:1px solid #050506;
+  box-shadow:inset 0 3px 8px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(255,255,255,.03);
+  transition:--gx .3s ease-out,--gy .3s ease-out}
+.tele::after{content:"";position:absolute;inset:3px;z-index:4;pointer-events:none;
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 0 22px rgba(255,255,255,.03);
+  background:
+    radial-gradient(60% 90% at var(--gx) var(--gy),rgba(255,255,255,.16),rgba(255,255,255,0) 70%),
+    linear-gradient(112deg,rgba(255,255,255,.08) 0,rgba(255,255,255,.02) 34%,rgba(255,255,255,0) 35%,rgba(255,255,255,0) 62%,rgba(255,255,255,.035) 63%,rgba(255,255,255,0) 80%)}
+.tele::before{content:"";position:absolute;left:6px;right:6px;top:3px;height:1px;z-index:5;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4) var(--gx),transparent 90%)}
+.tele .screen{margin:2px}
+.tele .master{margin:2px 0}
+@media (prefers-reduced-motion:reduce){.tele{transition:none}}
+/* compact fit */
+.tele{padding:6px}
+.pads{grid-auto-rows:56px;gap:9px;padding:10px 12px 12px}
+.wave{height:44px}
+/* short phones: keep every panel inside one screen */
+@media (max-height:760px) and (orientation:portrait){
+  .app{gap:8px;padding:10px}
+  .pads{grid-auto-rows:48px;gap:8px;padding:8px 10px 10px}
+  .pad{padding:5px 8px}.pad .nm{font-size:16px}
+  .wave{height:34px}.chord{font-size:34px}
+  .screen{padding:7px 10px 8px}
+  .panels{padding:10px}
+  .perf{grid-template-columns:128px minmax(0,1fr);gap:10px}
+  .bar{margin-bottom:6px}
+  input[type=range]{height:22px}
+  .kb{height:84px}
+}
+@media (max-height:690px) and (orientation:portrait){
+  .pads{grid-auto-rows:42px}
+  .wave{height:26px}.chord{font-size:30px}
+  .perf{grid-template-columns:112px minmax(0,1fr);gap:8px}
+  .pcol{gap:5px}
+  .panels>section{gap:7px}
+  .kb{height:70px}
+}
+/* slightly rounded screen and glass */
+.tele{border-radius:9px}
+.tele::after{border-radius:6px}
+.tele .screen{border-radius:7px}
+.tele .master{border-radius:7px}
+
+/* aluminum body, gap light, circle of fifths, four tabs */
+@property --ax{syntax:'<percentage>';inherits:true;initial-value:30%}
+@property --ay{syntax:'<percentage>';inherits:true;initial-value:-4%}
+@property --gap{syntax:'<number>';inherits:true;initial-value:0}
+.app{transition:--ax .4s ease-out,--ay .4s ease-out;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.26),inset 1px 0 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(0,0,0,.75),inset -1px 0 0 rgba(0,0,0,.55),inset 0 0 0 3px rgba(0,0,0,.16),0 24px 40px -8px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.05)}
+.app::before{background:
+  radial-gradient(75% 40% at var(--ax) var(--ay),rgba(255,255,255,.075),rgba(255,255,255,0) 70%),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.7' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.1 -.42'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)' opacity='.22'/%3E%3C/svg%3E")}
+.app::after{border:1px solid rgba(240,80,154,calc(.12 + var(--gap) * .55));
+  box-shadow:0 0 calc(3px + var(--gap) * 9px) rgba(240,80,154,calc(.05 + var(--gap) * .28)),inset 0 0 calc(3px + var(--gap) * 9px) rgba(240,80,154,calc(.04 + var(--gap) * .22)),0 1px 0 rgba(255,255,255,.06)}
+.tabs3{--n:4}
+.seg:has(button:nth-child(4)[aria-selected="true"]){--i:3}
+.tabs3 button{padding-inline:3px;font-size:12.5px}
+.circle{grid-template-columns:minmax(0,190px) minmax(0,1fr);align-items:center;gap:14px}
+#fifths{width:100%;height:auto;display:block;touch-action:manipulation}
+#fifths .seg{fill:#1C1D20;stroke:#060607;stroke-width:1;cursor:pointer;transition:fill .15s}
+#fifths .seg.inn{fill:#17181A}
+#fifths .seg.nb{fill:#2E2A31}
+#fifths .seg.par{fill:#3F2B38}
+#fifths .seg.on{fill:#B8427B}
+#fifths .seg:hover{fill:#33343A}
+#fifths .seg.on:hover{fill:#C84F88}
+#fifths .lab{font:600 11px var(--sans);fill:var(--ink);text-anchor:middle;pointer-events:none}
+#fifths .lab.sm{font:500 8px var(--mono);fill:var(--muted)}
+#fifths .mid{font:500 9px var(--mono);fill:var(--amber);text-anchor:middle;pointer-events:none}
+.cinfo{display:grid;gap:8px;min-width:0}
+.cinfo div{display:grid;gap:1px}
+.cinfo b{font-weight:600;font-size:14px;color:var(--ink);overflow-wrap:anywhere}
+
+[hidden]{display:none!important}

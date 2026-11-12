@@ -1,0 +1,17 @@
+{
+  "name": "suspire",
+  "version": "1.0.0",
+  "description": "SUSPIRE: a chord instrument for your phone. Single-file HTML, no install.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Kirill Kinderhart",
+  "repository": { "type": "git", "url": "git+https://github.com/SHOOGAZE/suspire.git" },
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node build.mjs --check",
+    "serve": "node tests/serve.cjs",
+    "test": "node build.mjs --check && node --test tests/*.test.cjs",
+    "shots": "node tests/screenshots.cjs"
+  },
+  "devDependencies": { "playwright": "^1.48.0" }
+}

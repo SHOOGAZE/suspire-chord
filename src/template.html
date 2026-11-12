@@ -1,0 +1,224 @@
+<meta charset="utf-8">
+<title>SUSPIRE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SUSPIRE">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="SUSPIRE: a chord instrument for your phone. Chords, exhaled.">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Pixelify+Sans:wght@500;700&display=swap">
+<style>
+@@STYLES@@</style>
+
+<div class="splash" id="splash" aria-hidden="true"><canvas id="splashCv"></canvas></div>
+<div class="sheet" id="sheet" hidden><div class="sheetBg" id="sheetBg"></div><div class="sheetBox" role="dialog" aria-label="Chord set"><div class="sheetHead"><b>Chord set</b><button type="button" id="sheetDone">Done</button></div><div class="sheetBody" id="sheetBody"></div></div></div>
+<div class="app">
+  <i class="screw a"></i><i class="screw b"></i><i class="screw c"></i><i class="screw d"></i>
+  <header class="head">
+    <div class="brand"><small>SUSPIRE</small></div>
+    <div class="vizSq" id="vizSq" role="button" tabindex="0" aria-label="Scene. Tap for next vibe"></div>
+    <div class="hdrChord" id="hdrChord" aria-hidden="true"><b id="hcName">C</b><span id="hcNotes"></span></div>
+    <div class="tport"><button class="chip small rec" id="hRec" aria-pressed="false" aria-label="Record">●</button><button class="chip small" id="hPlay" aria-pressed="false" aria-label="Play or stop">▶</button></div>
+    <div class="seg" role="tablist" aria-label="Play surface">
+      <button role="tab" aria-selected="true" data-view="pads" id="tabPads">Pads</button>
+      <button role="tab" aria-selected="false" data-view="keys" id="tabKeys">Keys</button>
+    </div>
+  </header>
+
+  <div class="tele">
+    <section class="screen" aria-live="polite">
+      <canvas id="crit" aria-hidden="true"></canvas>
+      <div class="meta"><span id="meta"></span></div>
+      <div class="chord" id="chordName">C</div>
+      <div class="notes"><span id="chordNotes"></span><span class="tags"><span id="tagRec">REC</span><span id="tagLoop">LOOP</span><span id="tagHold">HOLD</span></span></div>
+      <div class="nxtrow"><div class="nxt" id="nxt"></div><button class="vibeBtn" id="visBtn" aria-label="Visual mode" aria-pressed="false">Visual</button><button class="vibeBtn" id="vibeBtn" aria-label="Next vibe">Vibe</button></div>
+      <canvas class="wave" id="wave" role="button" tabindex="0" aria-label="Visualizer. Tap to change the view" title="Tap to change the view"></canvas>
+      <div class="beats" id="beats" aria-hidden="true"></div>
+    </section>
+    <div class="master">
+      <div class="enc big" id="vol" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80"></div>
+      <span class="klab">Volume</span><output id="volOut"></output>
+    </div>
+  </div>
+
+  <main class="deck">
+    <section id="padsView" aria-label="Chord pads">
+      <div class="bar">
+        <button class="setBtn" id="setBtn" type="button" aria-haspopup="dialog"><span id="setTxt">C Major</span><i aria-hidden="true">▾</i></button>
+        <select id="keySel" aria-label="Key"></select>
+        <select id="scaleSel" aria-label="Scale"><option value="major">Major</option><option value="minor">Minor</option><option value="dorian">Dorian</option><option value="phrygian">Phrygian</option><option value="lydian">Lydian</option><option value="mixolydian">Mixolydian</option><option value="locrian">Locrian</option><option value="harmonic">Harmonic minor</option><option value="melodic">Melodic minor</option><option value="phrygdom">Phrygian dominant</option><option value="lyddom">Lydian dominant</option><option value="hungarian">Hungarian minor</option><option value="doubleh">Double harmonic</option></select>
+        <select id="progSel" aria-label="Progression"></select>
+        <button class="chip small" id="padEdit" aria-pressed="false" title="Tap a pad to change which chord it plays">Edit</button>
+              </div>
+      <div class="pads" id="padGrid"></div>
+    </section>
+
+    <section id="keysView" aria-label="Root keys and chord quality" hidden>
+      <div class="bar">
+        <span class="label">Octave</span>
+        <button class="chip small" id="octDown" aria-label="Octave down">−</button>
+        <b id="octVal" style="font-family:var(--mono);min-width:2ch;text-align:center">3</b>
+        <button class="chip small" id="octUp" aria-label="Octave up">+</button>
+        <span class="sp"></span>
+        <button class="chip small" id="holdKeys" aria-pressed="false">Hold</button>
+      </div>
+      <div class="kb" id="kb"></div>
+      <div class="quality">
+        <div id="typeBtns">
+          <button class="chip" data-t="maj" aria-pressed="true">Maj</button>
+          <button class="chip" data-t="min" aria-pressed="false">Min</button>
+          <button class="chip" data-t="dim" aria-pressed="false">Dim</button>
+          <button class="chip" data-t="sus" aria-pressed="false">Sus</button>
+        </div>
+        <i aria-hidden="true"></i>
+        <div id="extBtns">
+          <button class="chip" data-e="6" aria-pressed="false">6</button>
+          <button class="chip" data-e="m7" aria-pressed="false">m7</button>
+          <button class="chip" data-e="M7" aria-pressed="false">M7</button>
+          <button class="chip" data-e="9" aria-pressed="false">9</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="stageModes" id="stageModes" role="group" aria-label="Play mode">
+    <button class="chip" data-m="chord" aria-pressed="true">Chord</button><button class="chip" data-m="strum" aria-pressed="false">Strum</button><button class="chip" data-m="slop" aria-pressed="false">Slop</button><button class="chip" data-m="arp" aria-pressed="false">Arp</button><button class="chip" data-m="pattern" aria-pressed="false">Pat</button><button class="chip" data-m="harp" aria-pressed="false">Harp</button>
+  </div>
+
+  <div class="dock">
+    <button class="handle" id="dockHandle" aria-expanded="true" aria-label="Hide or show the menu"><i></i></button>
+    <div class="seg tabs3" role="tablist" aria-label="Controls">
+      <button role="tab" id="tabPerf" aria-selected="true" data-panel="panelPerf">Perform</button>
+      <button role="tab" id="tabLoop" aria-selected="false" data-panel="panelLoop">Loop</button>
+      <button role="tab" id="tabSound" aria-selected="false" data-panel="panelSound">Sound</button>
+      <button role="tab" id="tabCircle" aria-selected="false" data-panel="panelCircle">Circle</button>
+    </div>
+    <div class="panels" data-cap="Perform">
+      <section id="panelPerf" class="perf" role="tabpanel" aria-labelledby="tabPerf">
+        <div class="tpad">
+          <div class="joy" id="joy" aria-label="Timbre pad: drag to change the chord color">
+            <span class="edge t">Jazzy</span><span class="edge b">Sus</span><span class="edge l">Dark</span><span class="edge r">Bright</span>
+            <div class="dot" id="joyDot"></div>
+          </div>
+          <div class="joyLabel" id="joyLabel">Plain triad</div>
+          <button class="chip small" id="latchBtn" aria-pressed="false" title="Keep the pad where you leave it">Latch</button>
+        </div>
+        <div class="pcol">
+          <div class="quick" id="quick">
+            <button class="chip" id="qKey" title="Key: tap to move up a fifth"></button>
+            <button class="chip" id="qSound" title="Sound: next vibe"></button>
+            <button class="chip" id="qMode" title="Play mode: next"></button>
+            <button class="chip" id="qJazz" aria-pressed="false" title="Seventh chords on every pad">Jazz 7ths</button>
+            <button class="chip" id="qDrums" aria-pressed="false" title="Drums on or off">Drums</button>
+            <button class="chip" id="qHold" aria-pressed="false" title="Keep chords ringing">Hold</button>
+          </div>
+          <div class="pills" id="modeChips">
+            <button class="chip" data-m="chord" aria-pressed="true">Chord</button>
+            <button class="chip" data-m="strum" aria-pressed="false">Strum</button>
+            <button class="chip" data-m="slop" aria-pressed="false">Slop</button>
+            <button class="chip" data-m="arp" aria-pressed="false">Arp</button>
+            <button class="chip" data-m="pattern" aria-pressed="false">Pattern</button>
+            <button class="chip" data-m="harp" aria-pressed="false">Harp</button>
+          </div>
+          <div class="opts" id="arpOpts" hidden>
+            <select id="arpRate" aria-label="Arp rate"><option value="1">1/4</option><option value="2">1/8</option><option value="3">1/8T</option><option value="4" selected>1/16</option><option value="6">1/16T</option><option value="8">1/32</option></select>
+            <select id="arpDir" aria-label="Arp order"><option value="up">Up</option><option value="down">Down</option><option value="updown">Up/down</option><option value="downup">Down/up</option><option value="converge">Converge</option><option value="random">Random</option></select>
+            <select id="arpOct" aria-label="Arp octaves"><option value="1">1 oct</option><option value="2" selected>2 oct</option><option value="3">3 oct</option></select>
+            <div class="fader" style="flex:1 1 100%"><label for="arpGate">Gate</label><input type="range" id="arpGate" min=".1" max="1" step=".01" value=".85"><output id="arpGateOut">85%</output></div>
+          </div>
+          <div class="opts" id="patOpts" hidden></div>
+          <p id="modeHint" hidden></p>
+          <div class="opts"><button class="chip small" id="smoothBtn" aria-pressed="true" title="Each chord takes the inversion closest to the previous one">Smooth</button></div>
+          <div class="fader"><label for="vox">Voicing</label><input type="range" id="vox" min="-3" max="3" step="1" value="0"><output id="voxOut">Root</output></div>
+          <div class="fader"><label for="bassLvl">Bass</label><input type="range" id="bassLvl" min="0" max="1" step=".01" value=".8"><output id="bassLvlOut">80%</output></div>
+          <details class="feel"><summary>Feel</summary>
+            <button class="chip small" id="critBtn" aria-pressed="true" title="Animated scenes on the display when you play">Display: Synthwave</button>
+            <div class="fader"><label for="swing">Swing</label><input type="range" id="swing" min="0" max="1" step=".01" value="0"><output id="swingOut">0%</output></div>
+            <div class="fader"><label for="human">Human</label><input type="range" id="human" min="0" max="1" step=".01" value="0"><output id="humanOut">0%</output></div>
+          </details>
+        </div>
+      </section>
+
+      <section id="panelLoop" class="loop" role="tabpanel" aria-labelledby="tabLoop" hidden>
+        <div class="r">
+          <button class="chip rec" id="recBtn" aria-pressed="false">● Rec</button>
+          <button class="chip" id="playBtn" aria-pressed="false">▶ Play</button>
+          <button class="chip" id="layerBtn" aria-label="Recording layer" title="Record into layer 1 or 2. Clear only wipes the layer you are on.">Layer 1</button>
+          <button class="chip" id="clearBtn">Clear</button>
+          <button class="chip" id="mutBtn">Mutate</button>
+          <button class="chip" id="undoBtn">Undo</button>
+        </div>
+        <div class="drums">
+          <button class="chip" id="drumBtn" aria-pressed="false">Drums</button>
+          <select id="kitSel" aria-label="Drum kit"></select>
+          <select id="dpatSel" aria-label="Drum pattern"></select>
+          <div class="fader" style="flex:1 1 100%"><label for="drumLvl">Level</label><input type="range" id="drumLvl" min="0" max="1" step=".01" value=".7"><output id="drumLvlOut">70%</output></div>
+        </div>
+        <div class="r">
+          <span class="label">Bars</span>
+          <select id="barsSel" aria-label="Bars"><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option></select>
+          <div class="bpm"><button class="chip small" id="bpmDown" aria-label="Slower">−</button><b id="bpmVal">96</b><span class="label">BPM</span><button class="chip small" id="bpmUp" aria-label="Faster">+</button></div>
+          <button class="chip small" id="metroBtn" aria-pressed="false">Click</button>
+          <span class="status" id="loopInfo">Empty</span>
+        </div>
+        <div class="mem">
+          <button class="chip small" id="storeBtn" aria-pressed="false">Store</button>
+          <span id="slots" style="display:contents"></span>
+        </div>
+        <div class="mem2">
+          <button class="chip small" id="expMid" title="Export the loop as a MIDI file">.mid</button>
+          <button class="chip small" id="expWav" title="Bounce the loop to a WAV file">.wav</button>
+          <button class="chip small" id="expJson" title="Save all slots to a file">Backup</button>
+          <button class="chip small" id="impJson" title="Restore slots from a backup file">Restore</button>
+          <input type="file" id="impFile" accept=".json,application/json" hidden>
+        </div>
+        <p class="status" id="slotInfo"></p>
+        <span id="loopBar" hidden></span>
+      </section>
+
+      <section id="panelCircle" class="circle" role="tabpanel" aria-labelledby="tabCircle" hidden>
+        <svg id="fifths" viewBox="0 0 200 200" role="group" aria-label="Circle of fifths. Tap a key to change the key."></svg>
+        <div class="cinfo" id="cinfo"></div>
+      </section>
+
+      <section id="panelSound" class="sound" role="tabpanel" aria-labelledby="tabSound" hidden>
+        <div class="vibes" id="vibes" role="group" aria-label="Vibe"></div>
+        <div class="insts" id="insts"></div>
+        <div class="sampler">
+          <label class="chip small" for="sampleFile">Load sample</label>
+          <input type="file" id="sampleFile" accept="audio/*" style="position:absolute;opacity:0;width:1px;height:1px">
+          <span class="label">C =</span>
+          <select id="sampleRoot" aria-label="Pitch of C"><option value="36">C2</option><option value="48">C3</option><option value="60" selected>C4</option><option value="72">C5</option></select>
+          <span class="file" id="sampleName">No sample yet.</span>
+        </div>
+        <div class="encs">
+          <div class="kn"><div class="enc" id="tone" role="slider" tabindex="0" aria-label="Tone" aria-valuemin="0" aria-valuemax="100" aria-valuenow="75"></div><span class="klab">Tone</span><output id="toneOut"></output></div>
+          <div class="kn"><div class="enc" id="chorus" role="slider" tabindex="0" aria-label="Chorus" aria-valuemin="0" aria-valuemax="100" aria-valuenow="30"></div><span class="klab">Chorus</span><output id="chorusOut"></output></div>
+          <div class="kn"><div class="enc" id="delay" role="slider" tabindex="0" aria-label="Delay" aria-valuemin="0" aria-valuemax="100" aria-valuenow="15"></div><span class="klab">Delay</span><output id="delayOut"></output></div>
+          <div class="kn"><div class="enc" id="reverb" role="slider" tabindex="0" aria-label="Reverb" aria-valuemin="0" aria-valuemax="100" aria-valuenow="30"></div><span class="klab">Reverb</span><output id="reverbOut"></output></div>
+        </div>
+        <details class="feel"><summary>Shape</summary>
+          <div class="encs">
+            <div class="kn"><div class="enc" id="atk" role="slider" tabindex="0" aria-label="Attack" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div><span class="klab">Attack</span><output id="atkOut"></output></div>
+            <div class="kn"><div class="enc" id="rel" role="slider" tabindex="0" aria-label="Release" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div><span class="klab">Release</span><output id="relOut"></output></div>
+            <div class="kn"><div class="enc" id="trem" role="slider" tabindex="0" aria-label="Tremolo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div><span class="klab">Tremolo</span><output id="tremOut"></output></div>
+            <div class="kn"><div class="enc" id="trate" role="slider" tabindex="0" aria-label="Tremolo rate" aria-valuemin="0" aria-valuemax="100" aria-valuenow="40"></div><span class="klab">Rate</span><output id="trateOut"></output></div>
+          </div>
+          <button class="chip small" id="numBtn" aria-pressed="false" title="Show chords as roman numerals or Nashville numbers">Labels: Roman</button>
+        </details>
+      </section>
+    </div>
+  </div>
+  <div class="hint" id="hint" role="status">Tap pads · drag the dish · pull the handle up for settings</div>
+  <div class="print" aria-hidden="true"><i></i><span>SUSPIRE</span><i></i><span>Chord instrument</span><i></i><span>01</span><i></i></div>
+</div>
+
+<script>
+@@SCRIPT@@</script>

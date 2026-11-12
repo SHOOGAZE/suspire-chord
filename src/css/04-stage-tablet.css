@@ -1,0 +1,87 @@
+/* Stage: hide the menu, give the keys the room */
+.stageModes{display:none}
+.app.stage .tabs3,.app.stage .print{display:none}
+.app.stage .stageModes{display:none}
+.app.stage .stageModes .chip{padding:0;min-height:44px;font-size:11.5px;letter-spacing:-.01em;text-align:center}
+.app.stage .deck{flex:1;min-height:0;display:flex;flex-direction:column}
+.app.stage #padsView:not([hidden]),.app.stage #keysView:not([hidden]){flex:1;min-height:0;display:flex;flex-direction:column}
+.app.stage .pads{flex:1;min-height:0;grid-auto-rows:1fr;grid-template-rows:repeat(2,minmax(0,1fr));gap:12px;padding:14px 14px 18px}
+.app.stage .pad{padding:10px 12px}
+.app.stage .pad .nm{font-size:28px}
+.app.stage .pad .num{font-size:11px}
+.app.stage .pad.hold{font-size:16px}
+.app.stage .kb{flex:1;height:auto;min-height:0}
+.app.stage .quality .chip{min-height:56px}
+.handle{display:flex;align-items:center;justify-content:center;width:100%;height:24px;margin:-4px 0 2px;padding:0;background:none;border:0;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
+.handle i{display:block;width:44px;height:4px;border-radius:2px;background:var(--ink-dim);opacity:.55;transition:opacity .15s,width .15s}
+.handle:active i{opacity:1;width:56px}
+.app.stage .handle{height:28px;margin:0}
+@media (orientation:landscape) and (max-height:560px){
+  .app.stage{grid-template-areas:"head head" "tele deck" "dock deck";grid-template-rows:auto minmax(0,1fr) auto}
+  .app.stage .stageModes{grid-column:1/-1}
+  .app.stage .pads{grid-template-rows:repeat(2,minmax(0,1fr))}
+}
+@media (orientation:landscape) and (max-height:560px){.app.stage .pad .nm{font-size:22px}}
+.pads.editing .pad:not(.hold){outline:1px dashed var(--ink-dim);outline-offset:-5px}
+#padEdit[aria-pressed="true"]{color:var(--amber)}
+.bar #progSel{flex:1 1 0;min-width:0}
+.mem2{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mem2 .chip{flex:1 1 0;min-width:64px}
+.app.stage .dock{flex:0 0 auto;min-height:0}
+.bar #keySel{flex:0 0 auto}.bar #scaleSel{flex:1 1 0;min-width:0}
+.bar #progSel{flex:1.2 1 0}
+
+/* round joystick dish */
+.joy{border-radius:50%;
+  background:
+    radial-gradient(circle closest-side,transparent 29.4%,rgba(255,255,255,.07) 30%,transparent 30.6%,transparent 69.4%,rgba(255,255,255,.07) 70%,transparent 70.6%),
+    linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,.07)) center/1px 100% no-repeat,
+    linear-gradient(rgba(255,255,255,.07),rgba(255,255,255,.07)) center/100% 1px no-repeat,
+    radial-gradient(circle at 50% 42%,#26272B,#0C0D0F 80%);
+  box-shadow:inset 0 5px 12px rgba(0,0,0,.95),inset 0 0 0 1px #000,0 1px 0 rgba(255,255,255,.14),0 0 0 3px #131416,0 0 0 4px #000}
+.joy::before{display:none}
+.joy .edge{font-size:8.5px}
+.joy .t{top:11%}.joy .b{bottom:11%}.joy .l{left:9%}.joy .r{right:9%}
+
+/* tablets: portrait */
+@media (min-width:700px) and (min-height:860px) and (orientation:portrait){
+  .app{max-width:680px;gap:14px;padding:20px}
+  .chord{font-size:76px}.wave{height:64px}
+  .pads{grid-auto-rows:104px;gap:14px;padding:18px}
+  .pad .nm{font-size:30px}.pad .num{font-size:12px}
+  .perf{grid-template-columns:240px minmax(0,1fr);gap:20px}
+  .panels{padding:20px}
+  .kb{height:200px}
+  .chip{min-height:46px}
+  .brand{font-size:20px}
+}
+/* tablets: landscape, two columns like a phone on its side but roomy */
+@media (orientation:landscape) and (min-width:900px) and (min-height:561px){
+  .app{max-width:1180px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:auto auto minmax(0,1fr);grid-template-areas:"head head" "tele deck" "dock deck";gap:14px 22px;padding:20px}
+  .head{grid-area:head}.tele{grid-area:tele}.deck{grid-area:deck;overflow-y:auto;min-height:0}.dock{grid-area:dock;min-height:0;display:flex;flex-direction:column}
+  .pads{grid-auto-rows:minmax(84px,14vh);gap:14px;padding:18px}
+  .pad .nm{font-size:28px}
+  .kb{height:min(300px,40vh)}
+  .chord{font-size:64px}
+  .app.stage{grid-template-areas:"head head" "tele deck" "dock deck";grid-template-rows:auto minmax(0,1fr) auto}
+  .app.stage .stageModes{grid-column:1/-1}
+}
+.vibes{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.vibes::-webkit-scrollbar{display:none}
+.vibes .chip{flex:0 0 auto;padding:6px 12px;font-size:12px}
+.drums{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.drums .chip{flex:0 0 auto}
+.drums select{flex:1 1 0;min-width:0}
+#drumBtn[aria-pressed="true"]{color:var(--amber)}
+#numBtn{justify-self:start}
+.nxtrow{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.nxtrow .nxt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vibeBtn{flex:0 0 auto;font:400 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);background:none;border:1px solid rgba(255,255,255,.14);border-radius:4px;padding:5px 8px;min-height:28px;cursor:pointer}
+.vibeBtn:active{color:var(--amber);border-color:var(--amber)}
+.hint{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:min(92vw,360px);z-index:50;padding:10px 14px;border-radius:8px;background:#0B0B0C;border:1px solid rgba(255,255,255,.16);color:var(--ink-dim);font:400 11px/1.4 var(--mono);text-align:center;pointer-events:none;opacity:0;transition:opacity .4s}
+.hint.show{opacity:1}
+.joy .edge{transition:color .12s}
+.joy .edge.on{color:var(--amber)}
+.joy.far .dot{box-shadow:0 5px 8px rgba(0,0,0,.7),0 0 0 2px #0F1012,0 0 0 3px var(--amber),0 0 18px var(--glow),inset 0 1px 0 rgba(255,255,255,.08)}
+#layerBtn[aria-pressed="true"]{color:var(--amber)}
+
