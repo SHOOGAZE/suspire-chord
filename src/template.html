@@ -13,23 +13,21 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Pixelify+Sans:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Pixelify+Sans:wght@500;700&display=swap">
 <style>
 @@STYLES@@</style>
 
 <div class="splash" id="splash" aria-hidden="true"><canvas id="splashCv"></canvas></div>
-<div class="sheet" id="sheet" hidden><div class="sheetBg" id="sheetBg"></div><div class="sheetBox" role="dialog" aria-label="Chord set"><div class="sheetHead"><b>Chord set</b><button type="button" id="sheetDone">Done</button></div><div class="sheetBody" id="sheetBody"></div></div></div>
+<div class="sheet" id="sheet" hidden><div class="sheetBg" id="sheetBg"></div><div class="sheetBox" role="dialog" aria-label="Chord set"><div class="sheetHead"><b>Chord set</b><button type="button" id="sheetLang" aria-label="Language">РУ</button><button type="button" id="sheetHelp" aria-label="How to play">?</button><button type="button" id="sheetDone">Done</button></div><div class="sheetBody" id="sheetBody"></div></div></div>
+<div class="help" id="help" hidden role="dialog" aria-label="How to play"><div class="helpBox"><h2>HOW TO PLAY</h2><ul id="helpList"></ul><div class="langRow"><button type="button" data-l="en">EN</button><button type="button" data-l="ru">РУ</button></div><button type="button" id="helpDone">GOT IT</button></div></div>
+<div class="macPick" id="macPick" hidden role="listbox" aria-label="Encoder function"></div>
 <div class="app">
   <i class="screw a"></i><i class="screw b"></i><i class="screw c"></i><i class="screw d"></i>
   <header class="head">
-    <div class="brand"><small>SUSPIRE</small></div>
+    <button class="brand" id="hSnd" type="button" aria-label="Sound: tap for the next one"><small id="hSndTxt">SUSPIRE</small></button><button class="helpBtn" id="hHelp" type="button" aria-label="How to play">?</button>
     <div class="vizSq" id="vizSq" role="button" tabindex="0" aria-label="Scene. Tap for next vibe"></div>
     <div class="hdrChord" id="hdrChord" aria-hidden="true"><b id="hcName">C</b><span id="hcNotes"></span></div>
-    <div class="tport"><button class="chip small rec" id="hRec" aria-pressed="false" aria-label="Record">●</button><button class="chip small" id="hPlay" aria-pressed="false" aria-label="Play or stop">▶</button></div>
-    <div class="seg" role="tablist" aria-label="Play surface">
-      <button role="tab" aria-selected="true" data-view="pads" id="tabPads">Pads</button>
-      <button role="tab" aria-selected="false" data-view="keys" id="tabKeys">Keys</button>
-    </div>
+    <div class="tport"><button class="chip small rec" id="hRec" aria-pressed="false" aria-label="Record">●</button><button class="chip small" id="hPlay" aria-pressed="false" aria-label="Play or stop">▶</button><button class="chip small bpmChip" id="hBpm" aria-label="Tempo: drag up or down, tap to tap the tempo"><b id="hBpmVal">96</b><i>BPM</i></button></div>
   </header>
 
   <div class="tele">
@@ -43,8 +41,10 @@
       <div class="beats" id="beats" aria-hidden="true"></div>
     </section>
     <div class="master">
-      <div class="enc big" id="vol" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80"></div>
-      <span class="klab">Volume</span><output id="volOut"></output>
+      <div class="mk"><div class="enc mid" id="vol" role="slider" tabindex="0" aria-label="Filter encoder" aria-valuemin="0" aria-valuemax="100" aria-valuenow="75"></div>
+        <button class="klab macLab" id="macLab" type="button" aria-label="Change what this encoder controls">Filter</button><output id="volOut"></output></div>
+      <div class="mk"><div class="enc mid" id="vol2" role="slider" tabindex="0" aria-label="Resonance encoder" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+        <button class="klab macLab" id="macLab2" type="button" aria-label="Change what this encoder controls">Reso</button><output id="vol2Out"></output></div>
     </div>
   </div>
 
@@ -56,36 +56,12 @@
         <select id="scaleSel" aria-label="Scale"><option value="major">Major</option><option value="minor">Minor</option><option value="dorian">Dorian</option><option value="phrygian">Phrygian</option><option value="lydian">Lydian</option><option value="mixolydian">Mixolydian</option><option value="locrian">Locrian</option><option value="harmonic">Harmonic minor</option><option value="melodic">Melodic minor</option><option value="phrygdom">Phrygian dominant</option><option value="lyddom">Lydian dominant</option><option value="hungarian">Hungarian minor</option><option value="doubleh">Double harmonic</option></select>
         <select id="progSel" aria-label="Progression"></select>
         <button class="chip small" id="padEdit" aria-pressed="false" title="Tap a pad to change which chord it plays">Edit</button>
+        <button class="chip small" id="dockBtn" type="button" aria-label="Show or hide the panels" aria-expanded="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 10l5-5 5 5"/></svg></button>
+        <button class="chip small" id="diceBtn" title="New progression in this key">Dice</button><button class="chip small" id="takeBtn" title="Undo the last recorded take" disabled>Undo</button>
               </div>
       <div class="pads" id="padGrid"></div>
     </section>
 
-    <section id="keysView" aria-label="Root keys and chord quality" hidden>
-      <div class="bar">
-        <span class="label">Octave</span>
-        <button class="chip small" id="octDown" aria-label="Octave down">−</button>
-        <b id="octVal" style="font-family:var(--mono);min-width:2ch;text-align:center">3</b>
-        <button class="chip small" id="octUp" aria-label="Octave up">+</button>
-        <span class="sp"></span>
-        <button class="chip small" id="holdKeys" aria-pressed="false">Hold</button>
-      </div>
-      <div class="kb" id="kb"></div>
-      <div class="quality">
-        <div id="typeBtns">
-          <button class="chip" data-t="maj" aria-pressed="true">Maj</button>
-          <button class="chip" data-t="min" aria-pressed="false">Min</button>
-          <button class="chip" data-t="dim" aria-pressed="false">Dim</button>
-          <button class="chip" data-t="sus" aria-pressed="false">Sus</button>
-        </div>
-        <i aria-hidden="true"></i>
-        <div id="extBtns">
-          <button class="chip" data-e="6" aria-pressed="false">6</button>
-          <button class="chip" data-e="m7" aria-pressed="false">m7</button>
-          <button class="chip" data-e="M7" aria-pressed="false">M7</button>
-          <button class="chip" data-e="9" aria-pressed="false">9</button>
-        </div>
-      </div>
-    </section>
   </main>
 
   <div class="stageModes" id="stageModes" role="group" aria-label="Play mode">
@@ -159,7 +135,12 @@
           <button class="chip" id="drumBtn" aria-pressed="false">Drums</button>
           <select id="kitSel" aria-label="Drum kit"></select>
           <select id="dpatSel" aria-label="Drum pattern"></select>
-          <div class="fader" style="flex:1 1 100%"><label for="drumLvl">Level</label><input type="range" id="drumLvl" min="0" max="1" step=".01" value=".7"><output id="drumLvlOut">70%</output></div>
+          <div class="fader" style="flex:1 1 100%"><label for="drumLvl">Drums</label><input type="range" id="drumLvl" min="0" max="1" step=".01" value=".7"><output id="drumLvlOut">70%</output></div>
+        </div>
+        <div class="drums lvls">
+          <div class="fader" style="flex:1 1 100%"><label for="loopLvl">Loop</label><input type="range" id="loopLvl" min="0" max="1" step=".01" value="1"><output id="loopLvlOut">100%</output></div>
+          <div class="fader" style="flex:1 1 100%"><label for="lv1">Layer 1</label><input type="range" id="lv1" min="0" max="1" step=".01" value="1"><output id="lv1Out">100%</output></div>
+          <div class="fader" style="flex:1 1 100%"><label for="lv2">Layer 2</label><input type="range" id="lv2" min="0" max="1" step=".01" value="1"><output id="lv2Out">100%</output></div>
         </div>
         <div class="r">
           <span class="label">Bars</span>
@@ -199,7 +180,8 @@
           <span class="file" id="sampleName">No sample yet.</span>
         </div>
         <div class="encs">
-          <div class="kn"><div class="enc" id="tone" role="slider" tabindex="0" aria-label="Tone" aria-valuemin="0" aria-valuemax="100" aria-valuenow="75"></div><span class="klab">Tone</span><output id="toneOut"></output></div>
+          <div class="kn"><div class="enc" id="tone" role="slider" tabindex="0" aria-label="Filter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="75"></div><span class="klab">Filter</span><output id="toneOut"></output></div>
+          <div class="kn"><div class="enc" id="res" role="slider" tabindex="0" aria-label="Resonance" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div><span class="klab">Reso</span><output id="resOut"></output></div>
           <div class="kn"><div class="enc" id="chorus" role="slider" tabindex="0" aria-label="Chorus" aria-valuemin="0" aria-valuemax="100" aria-valuenow="30"></div><span class="klab">Chorus</span><output id="chorusOut"></output></div>
           <div class="kn"><div class="enc" id="delay" role="slider" tabindex="0" aria-label="Delay" aria-valuemin="0" aria-valuemax="100" aria-valuenow="15"></div><span class="klab">Delay</span><output id="delayOut"></output></div>
           <div class="kn"><div class="enc" id="reverb" role="slider" tabindex="0" aria-label="Reverb" aria-valuemin="0" aria-valuemax="100" aria-valuenow="30"></div><span class="klab">Reverb</span><output id="reverbOut"></output></div>
