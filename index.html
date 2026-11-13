@@ -1474,11 +1474,16 @@ button,.pad,.bk,.joy,.chip,.enc,.handle,.seg{-webkit-user-select:none;user-selec
   .app.stage .tpad .master .mk{width:46px}
 }
 
-/* Menu layout on short screens (Safari with toolbars): let the page scroll instead of squeezing pads and the bottom panel */
-@media (orientation:portrait) and (max-height:800px){
-  .app:not(.stage){height:auto;min-height:100%}
-  .app:not(.stage) .panels{flex:0 0 auto;overflow:visible}
-  .app:not(.stage) .screen{min-height:200px}
+/* Safari: 100% is the tall viewport (it includes the area under the toolbar); dvh is what you can actually see */
+@supports (height:100dvh){html,body{height:100dvh}}
+
+/* Menu layout on phones: the display keeps a fixed share of the height, the bottom panel takes what is left,
+   and the page scrolls when the content is taller than the screen */
+@media (orientation:portrait) and (max-width:600px){
+  .app:not(.stage){height:auto;min-height:100%;gap:14px}
+  .app:not(.stage) .panels{flex:1 0 auto;overflow:visible}
+  .app:not(.stage) .tele{flex:0 0 auto}
+  .app:not(.stage) .screen{flex:0 0 auto;height:clamp(190px,25dvh,250px)}
   .app:not(.stage) .pads{flex:0 0 auto;grid-auto-rows:68px;gap:9px;padding:10px 12px 12px}
 }
 
@@ -1515,6 +1520,16 @@ button,.pad,.bk,.joy,.chip,.enc,.handle,.seg{-webkit-user-select:none;user-selec
   box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 2px 4px rgba(0,0,0,.55),0 1px 0 #08090A,0 2px 3px rgba(0,0,0,.5);
 }
 .app:not(.stage) .bar{justify-content:space-between}
+
+/* Layout switch between Edit and Dice */
+#dockBtn{display:inline-flex;align-items:center;justify-content:center;min-width:40px;padding:0 10px}
+#dockBtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+#dockBtn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.app.stage #dockBtn{min-height:40px}
+.app:not(.stage) .bar{margin-bottom:12px}
+
+/* The layout switch is the chevron button now; the grab handle is gone */
+#dockHandle{display:none!important}
 </style>
 
 <div class="splash" id="splash" aria-hidden="true"><canvas id="splashCv"></canvas></div>
@@ -1556,6 +1571,7 @@ button,.pad,.bk,.joy,.chip,.enc,.handle,.seg{-webkit-user-select:none;user-selec
         <select id="scaleSel" aria-label="Scale"><option value="major">Major</option><option value="minor">Minor</option><option value="dorian">Dorian</option><option value="phrygian">Phrygian</option><option value="lydian">Lydian</option><option value="mixolydian">Mixolydian</option><option value="locrian">Locrian</option><option value="harmonic">Harmonic minor</option><option value="melodic">Melodic minor</option><option value="phrygdom">Phrygian dominant</option><option value="lyddom">Lydian dominant</option><option value="hungarian">Hungarian minor</option><option value="doubleh">Double harmonic</option></select>
         <select id="progSel" aria-label="Progression"></select>
         <button class="chip small" id="padEdit" aria-pressed="false" title="Tap a pad to change which chord it plays">Edit</button>
+        <button class="chip small" id="dockBtn" type="button" aria-label="Show or hide the panels" aria-expanded="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 10l5-5 5 5"/></svg></button>
         <button class="chip small" id="diceBtn" title="New progression in this key">Dice</button><button class="chip small" id="takeBtn" title="Undo the last recorded take" disabled>Undo</button>
               </div>
       <div class="pads" id="padGrid"></div>
@@ -2742,7 +2758,7 @@ try{var sl=localStorage.getItem('suspire.lang');LANG=(sl==='ru'||sl==='en')?sl:(
 var RU={
 'Chord set':'Набор аккордов','Done':'Готово','Key':'Тональность','Scale':'Лад','Major':'Мажор','Minor':'Минор','Dorian':'Дорийский','Phrygian':'Фригийский','Lydian':'Лидийский','Mixolydian':'Миксолидийский','Locrian':'Локрийский','Harmonic minor':'Гармонический минор','Melodic minor':'Мелодический минор','Phrygian dominant':'Фригийский доминантовый','Lydian dominant':'Лидийский доминантовый','Hungarian minor':'Венгерский минор','Double harmonic':'Двойной гармонический','Progression':'Прогрессия','Free':'Свободно','Own':'Своя',
 'HOW TO PLAY':'КАК ИГРАТЬ','TAP A PAD':'ТАП ПО ПЭДУ','play a chord':'играет аккорд','PAD + KNOB':'ПЭД + РУЧКА','hold one, turn the other':'держи одно, крути другое','JOYSTICK':'ДЖОЙСТИК','dark / bright, jazzy / sus':'тёмный / яркий, джаз / сус','HOLD A KNOB':'УДЕРЖИ РУЧКУ','choose what it steers':'выбери, чем она управляет','DRAG BPM':'ТЯНИ BPM','tempo · tap 3x to set it':'темп · три тапа в такт задают его','SOUND NAME':'НАЗВАНИЕ ЗВУКА','tap for the next sound':'тап — следующий звук','CHORD SET':'НАБОР АККОРДОВ','key, scale, progression':'тональность, лад, прогрессия','DICE · UNDO':'КУБИК · ОТМЕНА','new progression · drop last take':'новая прогрессия · убрать последний дубль','REC, PLAY':'ЗАПИСЬ, ПУСК','loop what you play':'зацикли то, что играешь','GOT IT':'ПОНЯТНО',
-'REC':'ЗАП','LOOP':'ЛУП','HOLD':'ДЕРЖ','Visual':'Визуал','Edit':'Правка','Dice':'Кубик','Undo':'Отмена','Hold':'Держать','Chord':'Аккорд','Strum':'Страм','Slop':'Слоп','Arp':'Арп','Pat':'Пат','Harp':'Арфа','Perform':'Игра','Loop':'Луп','Sound':'Звук','Circle':'Круг','Jazzy':'Джаз','Sus':'Сус','Dark':'Тёмный','Bright':'Яркий','Plain triad':'Чистое трезвучие','Latch':'Фиксация','Mode':'Режим','Jazz 7ths':'Джаз 7-е','Drums':'Ударные','Pattern':'Паттерн','Up':'Вверх','Down':'Вниз','Up/down':'Вверх/вниз','Down/up':'Вниз/вверх','Converge':'К центру','Random':'Случайно','1 oct':'1 окт','2 oct':'2 окт','3 oct':'3 окт','Gate':'Гейт','Pump':'Памп','Offbeat':'Офбит','Push':'Пуш','Gallop':'Галоп','Eighths':'Восьмые','Skank':'Скэнк','Smooth':'Плавно','Voicing':'Расклад','Auto':'Авто','Bass':'Бас','Feel':'Ощущения','Swing':'Свинг','Human':'Живость',
+'REC':'ЗАП','LOOP':'ЛУП','HOLD':'ДЕРЖ','Visual':'Визуал','Edit':'Правка','Dice':'Кубик','Show or hide the panels':'Показать или скрыть панели','Undo':'Отмена','Hold':'Держать','Chord':'Аккорд','Strum':'Страм','Slop':'Слоп','Arp':'Арп','Pat':'Пат','Harp':'Арфа','Perform':'Игра','Loop':'Луп','Sound':'Звук','Circle':'Круг','Jazzy':'Джаз','Sus':'Сус','Dark':'Тёмный','Bright':'Яркий','Plain triad':'Чистое трезвучие','Latch':'Фиксация','Mode':'Режим','Jazz 7ths':'Джаз 7-е','Drums':'Ударные','Pattern':'Паттерн','Up':'Вверх','Down':'Вниз','Up/down':'Вверх/вниз','Down/up':'Вниз/вверх','Converge':'К центру','Random':'Случайно','1 oct':'1 окт','2 oct':'2 окт','3 oct':'3 окт','Gate':'Гейт','Pump':'Памп','Offbeat':'Офбит','Push':'Пуш','Gallop':'Галоп','Eighths':'Восьмые','Skank':'Скэнк','Smooth':'Плавно','Voicing':'Расклад','Auto':'Авто','Bass':'Бас','Feel':'Ощущения','Swing':'Свинг','Human':'Живость',
 '● Rec':'● Запись','▶ Play':'▶ Пуск','Clear':'Очистить','Mutate':'Мутация','Tape':'Лента','Analog':'Аналог','Soft':'Мягкий','Pulse':'Пульс','Boom bap':'Бум-бэп','Half time':'Хаф-тайм','Dream':'Мечта','Four floor':'Четыре на пол','Lo-fi shuffle':'Лоу-фай шаффл','Ballad':'Баллада','Trap':'Трэп','Bars':'Такты','Click':'Клик','Empty':'Пусто','Store':'Сохранить','Backup':'Бэкап','Restore':'Вернуть','no ♯♭':'без ♯♭','Signature':'Знаки','Relative':'Параллельная','Neighbors':'Соседи','Saw':'Пила','Pad':'Пэд','Strings':'Струнные','Piano':'Пианино','E-Piano':'Электропиано','Brass':'Медные','Flute':'Флейта','Organ':'Орган','Sample':'Сэмпл','Load sample':'Загрузить сэмпл','No sample yet.':'Сэмпла пока нет.',
 'Filter':'Фильтр','Reso':'Резо','Chorus':'Хорус','Delay':'Дилей','Reverb':'Реверб','Shape':'Форма','Attack':'Атака','Release':'Спад','Tremolo':'Тремоло','Rate':'Скорость','Drums ':'Ударные','Loop ':'Луп','Layer 1':'Слой 1','Layer 2':'Слой 2','Level':'Уровень',
 'Tap pads · drag the dish · pull the handle up for settings':'Тапай пэды · тяни джойстик · потяни ручку вверх для настроек','Chord instrument':'Аккордовый инструмент',
@@ -2948,8 +2964,9 @@ function init(){
   $$('#modeChips .chip').forEach(function(b){b.addEventListener('click',function(){setMode(b.getAttribute('data-m'));});});
   $('#arpRate').addEventListener('change',function(e){S.arpRate=parseInt(e.target.value,10);});
   $('#arpDir').addEventListener('change',function(e){S.arpDir=e.target.value;});
-  function setStage(v,keep){S.stage=v;if(window.suspireReloc)setTimeout(window.suspireReloc,0);var a=document.querySelector('.app');a.classList.toggle('stage',v);$('#dockHandle').setAttribute('aria-expanded',String(!v));if(!keep){try{localStorage.setItem('suspire.stage',v?'1':'0');}catch(e){}}}
+  function setStage(v,keep){S.stage=v;if(window.suspireReloc)setTimeout(window.suspireReloc,0);var a=document.querySelector('.app');a.classList.toggle('stage',v);$('#dockHandle').setAttribute('aria-expanded',String(!v));var db=$('#dockBtn');if(db)db.setAttribute('aria-expanded',String(!v));if(!keep){try{localStorage.setItem('suspire.stage',v?'1':'0');}catch(e){}}}
   (function(){var st=null;try{st=localStorage.getItem('suspire.stage');}catch(e){}setStage(st===null?true:st==='1',true);})();
+  (function(){var b=$('#dockBtn');if(b)b.addEventListener('click',function(){setStage(!S.stage);});})();
   (function(){
     var h=$('#dockHandle'),y0=null,moved=false;
     h.addEventListener('pointerdown',function(e){y0=e.clientY;moved=false;try{h.setPointerCapture(e.pointerId);}catch(_){}});

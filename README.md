@@ -1,100 +1,120 @@
-<h1 align="center">SUSPIRE</h1>
-<p align="center"><b>Chords, exhaled.</b><br>A chord instrument for your phone. One file, no install.</p>
+# SUSPIRE
 
-<p align="center"><a href="https://shoogaze.github.io/suspire/">shoogaze.github.io/suspire</a></p>
+A chord instrument for your phone: seven pads, one tap per chord, a joystick that makes it darker, brighter, suspended or jazzy. One HTML file, no dependencies, built for touch screens. Warm analog sound, a drum machine, a looper and MIDI export, and it installs as an app that runs offline. A pink-and-black sibling of [BEHEMOTH](https://shoogaze.github.io/behemoth-synth-/), [GRAINS](https://shoogaze.github.io/grains-synth/) and [ELEPHANT](https://shoogaze.github.io/elephant-sequencer/).
 
-<p align="center">
-  <img src="screenshots/boot.png" width="170" alt="Pixel boot screen">
-  <img src="screenshots/pads.png" width="170" alt="Play layout with drums running">
-  <img src="screenshots/chord-set.png" width="170" alt="Chord set sheet">
-  <img src="screenshots/help.png" width="170" alt="How to play">
+**Try it:** open [SUSPIRE](https://shoogaze.github.io/suspire-chord/) on your phone and tap a pad to start audio. On an iPhone or iPad use *Share → Add to Home Screen* for a full-screen app.
+
+## Screenshots
+
+Phone upright: the pixel boot screen, the play layout with drums running, the chord set sheet and the pixel how-to.
+
+<p>
+  <img src="screenshots/boot.png" width="24%" alt="Pixel boot screen">
+  <img src="screenshots/pads.png" width="24%" alt="Play layout with drums running">
+  <img src="screenshots/chord-set.png" width="24%" alt="Chord set sheet">
+  <img src="screenshots/help.png" width="24%" alt="How to play">
 </p>
-<p align="center">
-  <img src="screenshots/sound.png" width="170" alt="Sound menu">
-  <img src="screenshots/loop.png" width="170" alt="Loop">
-  <img src="screenshots/landscape.png" width="360" alt="Landscape">
+<p>
+  <img src="screenshots/sound.png" width="24%" alt="Sound tab">
+  <img src="screenshots/loop.png" width="24%" alt="Loop tab">
 </p>
 
-## What it is
+Phone held sideways: the display and all seven pads stay on screen.
 
-Seven pads, the seven chords of a key. Tap one and a full chord sounds with a bass under it. Drag the joystick to make it darker, brighter, suspended or jazzy. Every chord takes the inversion nearest to the last one, so progressions glide without any theory.
+<p>
+  <img src="screenshots/landscape.png" width="70%" alt="Landscape layout">
+</p>
 
-The body is black. Pink appears only where something is sounding.
+## Playing
 
-## Play
+- **Pads:** the seven chords of the chosen key and scale, staggered in two rows. Every chord takes the inversion nearest to the last one, so progressions glide without any theory. Tap **Edit**, then a pad, to change which degree it plays.
+- **Joystick:** chord colour on two axes, dark / bright and jazzy / sus. **Latch** keeps it where you leave it.
+- **Two layouts:** the play layout puts the display, pads and quick buttons on one screen; the chevron button between Edit and Dice opens the full menu with Perform, Loop, Sound and Circle tabs.
+- **Two hands:** hold a pad and turn a knob with the other thumb.
+- **Chord set:** one button (`C Major · Free`) opens a sheet with key, scale and progression, plus the language switch.
+- **Dice** writes a new progression in the current key, **Undo** removes the last recorded take.
+- **Tempo:** drag the BPM chip in the header up or down, or tap it three times in time.
+- **Help:** the pixel how-to shows on first run; the `?` button brings it back.
 
-The default **Play layout** is built for two thumbs: the joystick and quick buttons under the left, the pads under the right.
+## Features
 
-- **Pads**: seven chords of the chosen key and scale, staggered in two rows. Each pad's chord is remapped by the progression you pick. Tap **Edit**, then a pad, to cycle which degree it plays.
-- **Chord set**: one button (`C Major · Free`) opens a sheet with key, scale and progression.
-- **Joystick**: chord colour on two axes (dark / bright, jazzy / sus). **Latch** keeps it where you leave it.
-- **Quick buttons**: Key (up a fifth), Sound (next vibe), Mode, Jazz 7ths, Drums, Hold.
-- **Scene square**: the small frameless figure in the header is drawn from the chord you play: a Lissajous curve from its intervals, Joy Division-style ridges, a tunnel, a wire globe, an octahedron, a radial ring, a torus. Shape, phase and tilt change on every press, line weight follows velocity. Tap it for the next vibe.
-- **Step strip**: 16 steps under the pads show the drum pattern and the loop playhead.
-- **Handle**: pull the handle under the pads up for the full menu (Perform, Loop, Sound, Circle); drag it down to get the screen back.
-- **Dice**: a new progression in the current key, built from the chord map.
-- **Undo**: removes the last recorded take.
-- **Loop levels**: in the Loop tab, one fader for the whole loop and one per layer, plus a separate Drums level.
-- **Encoders**: two knobs, Filter and Reso by default. Hold a knob (or tap its label) to pick what it steers: Reverb, Delay, Chorus, Tremolo, Attack or Release.
-- **Help**: the pixel how-to shows on first run; the `?` button brings it back.
-- **Language**: English and Russian. Switch with the EN / РУ buttons in the help overlay or the Chord set sheet; the choice is stored in `suspire.lang`.
-- **Tempo**: drag the BPM chip in the header up or down, or tap it three times in time.
-- **Modes**: Chord, Strum, Slop, Arp, Pattern, Harp. Arp has rate, order, octaves and gate.
-- **Smooth voicing**: nearest inversion, or root position, or an inversion you set.
+**Sound**
+- Suspire voice: three detuned saws over a sub, a slow filter that opens and relaxes like an exhale, a breath of noise on the attack
+- Saw, Pad, Strings, Piano, E-Piano, Brass, Flute, Organ, or your own sample
+- Filter with resonance, chorus, delay and reverb with soft saturation and slow drift; attack, release and tremolo under Shape
+- Two macro encoders: Filter and Reso by default, hold a knob to point it at Reverb, Delay, Chorus, Tremolo, Attack or Release
+- Vibes: one tap sets instrument, effects, tempo, kit and pattern (Suspire, Dream, Lo-fi, Night drive, Hymn, Cinema)
 
-## Sound
+**Chords**
+- 13 scales: Major, Minor, Dorian, Phrygian, Lydian, Mixolydian, Locrian, Harmonic and Melodic minor, Phrygian dominant, Lydian dominant, Hungarian minor, Double harmonic
+- Modes: Chord, Strum, Slop, Arp, Pattern, Harp; the arpeggiator has rate, order, octaves and gate
+- Jazz 7ths, Hold, Key, and a circle of fifths on the Circle tab
+- Smooth voicing: nearest inversion, root position, or an inversion you set
 
-- **Suspire voice** (default): three detuned saws over a sub, a slow filter that opens and relaxes like an exhale, a breath of noise on the attack.
-- Saw, Pad, Strings, Piano, E-Piano, Brass, Flute, Organ, or your own sample.
-- Filter (with resonance), chorus, delay, reverb with soft saturation and slow drift; attack, release and tremolo under **Shape**.
-- **Vibes**: one tap sets instrument, effects, tempo, kit and pattern (Suspire, Dream, Lo-fi, Night drive, Hymn, Cinema).
-- **Drums**: three kits (Tape, Analog, Soft), eight patterns, locked to the loop.
-- **Scales** (13): Major, Minor, Dorian, Phrygian, Lydian, Mixolydian, Locrian, Harmonic and Melodic minor, Phrygian dominant, Lydian dominant, Hungarian minor, Double harmonic.
+**Rhythm and loop**
+- Drums: three kits (Tape, Analog, Soft), eight patterns, locked to the loop, with their own level
+- Record chords and joystick motion into two layers; separate levels for the loop and each layer; mutate, undo, eight memory slots
+- The scene square draws a figure from the chord you play and a laser stroke on every press
 
-## Loop and export
+**Export**
+- `.mid` (SMF type 0: chords, bass, drums on channel 10, layers on their own channels), `.wav` bounce with reverb tail, and a JSON backup of all slots. iOS has no Web MIDI, so files are the bridge to your DAW
 
-- Record chords and joystick motion into two layers; Clear wipes only the layer you are on. Mutate, undo, eight memory slots.
-- **.mid** (SMF type 0: chords, bass, drums on channel 10, layers on their own channels), **.wav** bounce with reverb tail, and a **JSON backup** of all slots. iOS has no Web MIDI, so files are the bridge to your DAW.
+**Phones and tablets**
+- Portrait, landscape and tablet layouts, safe areas and dynamic viewport height for notched phones
+- Interface languages: English and Russian (EN / РУ in the help overlay or the chord set sheet)
+- Installable as an app (PWA): fullscreen, works offline once loaded; audio plays with the iPhone mute switch on (iOS 17+)
 
-## Run it
+## Run
 
-Open the [live version](https://shoogaze.github.io/suspire/) on your phone, then *Share → Add to Home Screen*. It opens full-screen and works offline after the first visit (service worker; needs HTTPS, which GitHub Pages gives you). Audio is requested as playback, so it sounds with the iPhone mute switch on (iOS 17+).
+Open `index.html` in a modern browser and tap a pad to start audio, or run `npm run serve` and visit <http://localhost:8080>.
 
-Locally: open `index.html`, or `npm run serve` and visit <http://localhost:8080>.
+For install and offline use, serve the files over HTTPS, for example with GitHub Pages.
 
-## Develop
+### GitHub Pages
 
-`index.html` is a build artifact; the source lives in `src/` and is concatenated by a 30-line script, so there is no bundler and nothing to install to build.
+Settings → Pages → Deploy from branch → `main` / root. The instrument is then available at `https://<user>.github.io/<repo>/`. On an iPad or iPhone use Share → Add to Home Screen.
+
+## Files
+
+| File | Purpose |
+| --- | --- |
+| `index.html` | The whole instrument, built from `src/` (this is the file to open or deploy) |
+| `src/` | Source: `template.html`, `css/style.css`, `js/*.js` |
+| `build.mjs` | Assembles `src/` into `index.html` (no dependencies) |
+| `tests/` | Playwright tests, a static server and the screenshot script |
+| `screenshots/` | README screenshots |
+| `icons/`, `manifest.webmanifest`, `sw.js` | Install and offline support |
+| `.github/` | CI: builds, checks that `index.html` is up to date and runs the tests on every push |
+| `LICENSE` | MIT |
+
+## Development
+
+Edit the files in `src/`, then rebuild the single file (Node 18 or newer, nothing to install):
 
 ```
-suspire/
-├── index.html            built single file (what GitHub Pages serves)
-├── build.mjs             node build.mjs [--check]
-├── sw.js                 offline cache (bump the version when assets change)
-├── manifest.webmanifest
-├── src/
-│   ├── template.html     markup, with @@STYLES@@ and @@SCRIPT@@ slots
-│   ├── css/style.css     one stylesheet: base components first, layout media queries after
-│   └── js/               core, audio, drums, chords, modes, looper, display, playing, ui-pads, wiring
-├── tests/                Playwright + node:test, a static server, the screenshot script
-├── icons/  screenshots/
-└── .github/workflows/    runs the tests on every push
+node build.mjs          # writes index.html
+node build.mjs --check  # fails if index.html is out of date
+npm test                # Playwright: layouts, pads, Dice and Undo, Russian, offline, exports
+node tests/screenshots.cjs
 ```
 
-```sh
-npm install                 # playwright only, for tests and screenshots
-npx playwright install chromium
-npm run build               # src/ -> index.html
-npm test                    # build check + 10 browser tests
-npm run shots               # regenerate screenshots/
-```
-
-The tests load the real page in mobile Chromium and check: no console errors, pad tap lights the pad, names the chord and puts real signal on the audio destination; the scene square draws; the chord-set sheet remaps pads; portrait layout at 430, 414, 390 and 375 px wide (no horizontal scroll, labels not clipped); every scale with Jazz on and off keeps chord names inside their pads in the play, menu, landscape and tablet layouts; landscape; `.mid` and JSON export; offline reload through the service worker; and that `index.html` matches `src/`.
+`index.html` is committed so the instrument works straight from GitHub Pages. The JS files are concatenated in file-name order inside one scope, so a new file has to sort before `10-wiring.js`. After a change that users should receive, bump the cache name in `sw.js` so installed copies refresh.
 
 ## Browser support
 
-Safari on iOS 17+ is the target. Chrome and Safari on desktop work, with a phone-shaped layout. Needs Web Audio and CSS container queries.
+Current Safari, Chrome, Edge and Firefox. Built and tuned for iPhone Safari; Web MIDI is not used.
+
+## The family
+
+SUSPIRE is the pink one. The three black-and-white instruments below share a design; open them on the same phone and add the ones you like to the Home Screen.
+
+| App | What it is | Open | Source |
+| --- | --- | --- | --- |
+| **SUSPIRE** | Chord instrument with joystick, drums and looper | [shoogaze.github.io/suspire-chord](https://shoogaze.github.io/suspire-chord/) | [SHOOGAZE/suspire-chord](https://github.com/SHOOGAZE/suspire-chord) |
+| **ELEPHANT** | Pocket sampler groovebox: 16 pads, p-lock sequencer, sampler, FX | [shoogaze.github.io/elephant-sequencer](https://shoogaze.github.io/elephant-sequencer/) | [SHOOGAZE/elephant-sequencer](https://github.com/SHOOGAZE/elephant-sequencer) |
+| **BEHEMOTH** | Wavetable bass synthesizer with a modulation matrix | [shoogaze.github.io/behemoth-synth-](https://shoogaze.github.io/behemoth-synth-/) | [SHOOGAZE/behemoth-synth-](https://github.com/SHOOGAZE/behemoth-synth-) |
+| **GRAINS** | Granular sampler and playable instrument | [shoogaze.github.io/grains-synth](https://shoogaze.github.io/grains-synth/) | [SHOOGAZE/grains-synth](https://github.com/SHOOGAZE/grains-synth) |
 
 ## License
 
-MIT, © Kirill Kinderhart. Pixelify Sans and Sora are loaded from Google Fonts (OFL); the app falls back to system fonts offline.
+[MIT](LICENSE). Copyright (c) 2026 Kirill Kinderhart.
