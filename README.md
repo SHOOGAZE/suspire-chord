@@ -1,9 +1,7 @@
-<p align="center"><img src="icons/icon-512.png" width="140" alt="SUSPIRE icon"></p>
-
 <h1 align="center">SUSPIRE</h1>
 <p align="center"><b>Chords, exhaled.</b><br>A chord instrument for your phone. One file, no install.</p>
 
-<p align="center"><a href="https://shoogaze.github.io/suspire/">Open the instrument</a> · <a href="#run-it">Run it</a> · <a href="#develop">Develop</a></p>
+<p align="center"><a href="https://shoogaze.github.io/suspire/">shoogaze.github.io/suspire</a></p>
 
 <p align="center">
   <img src="screenshots/boot.png" width="170" alt="Pixel boot screen">
