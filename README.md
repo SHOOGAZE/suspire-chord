@@ -9,10 +9,11 @@
   <img src="screenshots/boot.png" width="170" alt="Pixel boot screen">
   <img src="screenshots/pads.png" width="170" alt="Play layout with drums running">
   <img src="screenshots/chord-set.png" width="170" alt="Chord set sheet">
+  <img src="screenshots/help.png" width="170" alt="How to play">
 </p>
 <p align="center">
   <img src="screenshots/sound.png" width="170" alt="Sound menu">
-  <img src="screenshots/keys.png" width="170" alt="Keys view">
+  <img src="screenshots/loop.png" width="170" alt="Loop">
   <img src="screenshots/landscape.png" width="360" alt="Landscape">
 </p>
 
@@ -33,7 +34,13 @@ The default **Play layout** is built for two thumbs: the joystick and quick butt
 - **Scene square**: the small frameless figure in the header is drawn from the chord you play: a Lissajous curve from its intervals, Joy Division-style ridges, a tunnel, a wire globe, an octahedron, a radial ring, a torus. Shape, phase and tilt change on every press, line weight follows velocity. Tap it for the next vibe.
 - **Step strip**: 16 steps under the pads show the drum pattern and the loop playhead.
 - **Handle**: pull the handle under the pads up for the full menu (Perform, Loop, Sound, Circle); drag it down to get the screen back.
-- **Keys**: a root keyboard with Maj, Min, Dim, Sus and 6, m7, M7, 9.
+- **Dice**: a new progression in the current key, built from the chord map.
+- **Undo**: removes the last recorded take.
+- **Loop levels**: in the Loop tab, one fader for the whole loop and one per layer, plus a separate Drums level.
+- **Encoders**: two knobs, Filter and Reso by default. Hold a knob (or tap its label) to pick what it steers: Reverb, Delay, Chorus, Tremolo, Attack or Release.
+- **Help**: the pixel how-to shows on first run; the `?` button brings it back.
+- **Language**: English and Russian. Switch with the EN / РУ buttons in the help overlay or the Chord set sheet; the choice is stored in `suspire.lang`.
+- **Tempo**: drag the BPM chip in the header up or down, or tap it three times in time.
 - **Modes**: Chord, Strum, Slop, Arp, Pattern, Harp. Arp has rate, order, octaves and gate.
 - **Smooth voicing**: nearest inversion, or root position, or an inversion you set.
 
@@ -41,7 +48,7 @@ The default **Play layout** is built for two thumbs: the joystick and quick butt
 
 - **Suspire voice** (default): three detuned saws over a sub, a slow filter that opens and relaxes like an exhale, a breath of noise on the attack.
 - Saw, Pad, Strings, Piano, E-Piano, Brass, Flute, Organ, or your own sample.
-- Tone, chorus, delay, reverb with soft saturation and slow drift; attack, release and tremolo under **Shape**.
+- Filter (with resonance), chorus, delay, reverb with soft saturation and slow drift; attack, release and tremolo under **Shape**.
 - **Vibes**: one tap sets instrument, effects, tempo, kit and pattern (Suspire, Dream, Lo-fi, Night drive, Hymn, Cinema).
 - **Drums**: three kits (Tape, Analog, Soft), eight patterns, locked to the loop.
 - **Scales** (13): Major, Minor, Dorian, Phrygian, Lydian, Mixolydian, Locrian, Harmonic and Melodic minor, Phrygian dominant, Lydian dominant, Hungarian minor, Double harmonic.
@@ -69,8 +76,8 @@ suspire/
 ├── manifest.webmanifest
 ├── src/
 │   ├── template.html     markup, with @@STYLES@@ and @@SCRIPT@@ slots
-│   ├── css/              base → surfaces → depth → stage/tablet → play layout → phone play
-│   └── js/               core, audio, drums, chords, modes, looper, display, playing, ui-pads, ui-keys, wiring
+│   ├── css/style.css     one stylesheet: base components first, layout media queries after
+│   └── js/               core, audio, drums, chords, modes, looper, display, playing, ui-pads, wiring
 ├── tests/                Playwright + node:test, a static server, the screenshot script
 ├── icons/  screenshots/
 └── .github/workflows/    runs the tests on every push
@@ -80,11 +87,11 @@ suspire/
 npm install                 # playwright only, for tests and screenshots
 npx playwright install chromium
 npm run build               # src/ -> index.html
-npm test                    # build check + 9 browser tests
+npm test                    # build check + 10 browser tests
 npm run shots               # regenerate screenshots/
 ```
 
-The tests load the real page in mobile Chromium and check: no console errors, pad tap lights the pad, names the chord and puts real signal on the audio destination; the scene square draws; the chord-set sheet remaps pads; portrait layout at 430, 414, 390 and 375 px wide (no horizontal scroll, labels not clipped); landscape; `.mid` and JSON export; offline reload through the service worker; and that `index.html` matches `src/`.
+The tests load the real page in mobile Chromium and check: no console errors, pad tap lights the pad, names the chord and puts real signal on the audio destination; the scene square draws; the chord-set sheet remaps pads; portrait layout at 430, 414, 390 and 375 px wide (no horizontal scroll, labels not clipped); every scale with Jazz on and off keeps chord names inside their pads in the play, menu, landscape and tablet layouts; landscape; `.mid` and JSON export; offline reload through the service worker; and that `index.html` matches `src/`.
 
 ## Browser support
 
