@@ -58,17 +58,4 @@ function padChord(d){
   notes=voicing(notes,S.voicing);
   return {notes:notes,bass:36+pc,name:name,pc:pc,deg:d,sig:notes.join(',')};
 }
-function keysChord(pc){
-  var iv=[0,4,7],t=S.kType,ex=S.kExt;
-  if(t==='min')iv=[0,3,7];else if(t==='dim')iv=[0,3,6];else if(t==='sus')iv=[0,5,7];
-  if(ex['6'])iv.push(9);
-  if(ex.m7)iv.push(10);
-  if(ex.M7)iv.push(11);
-  if(ex['9']){if(!ex.m7&&!ex.M7&&!ex['6'])iv.push(t==='maj'?11:10);iv.push(14);}
-  var base=12*(S.kOct+1)+pc;
-  var notes=iv.map(function(x){return base+x;});
-  var name=chordName(pc,notes);
-  notes=voicing(notes,S.voicing);
-  return {notes:notes,bass:36+pc,name:name,pc:pc,kpc:pc,sig:notes.join(',')};
-}
 

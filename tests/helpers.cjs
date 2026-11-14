@@ -31,7 +31,7 @@ async function launch({ width = 414, height = 794, stage = true, probe = false, 
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/fonts\.g|Failed to load resource|ERR_/.test(m.text())) errors.push(m.text()); });
   if (probe) await page.addInitScript(AUDIO_PROBE);
-  await page.addInitScript((st) => { try { localStorage.setItem('suspire.stage', st ? '1' : '0'); } catch (e) {} }, stage);
+  await page.addInitScript((st) => { try { localStorage.setItem('suspire.stage', st ? '1' : '0'); localStorage.setItem('suspire.help', '1'); if (!localStorage.getItem('suspire.lang')) localStorage.setItem('suspire.lang', 'en'); } catch (e) {} }, stage);
   await page.goto(url);
   await page.waitForSelector('.pad');
   await page.evaluate(() => { const s = document.getElementById('splash'); if (s) s.remove(); const h = document.getElementById('hint'); if (h) h.style.display = 'none'; });

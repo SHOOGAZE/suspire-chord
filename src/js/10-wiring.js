@@ -1,11 +1,4 @@
 /* ---------- UI: wiring ---------- */
-function setView(v){
-  S.view=v;
-  $('#padsView').hidden=v!=='pads';$('#keysView').hidden=v!=='keys';
-  $('#tabPads').setAttribute('aria-selected',String(v==='pads'));
-  $('#tabKeys').setAttribute('aria-selected',String(v==='keys'));
-  showMeta();
-}
 function setMode(m){
   S.mode=m;
   $$('#modeChips .chip').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-m')===m));});
@@ -42,7 +35,7 @@ function selectInst(k){
   $$('#insts .chip').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-i')===k));});
   if(k==='sample'&&!S.sample)$('#sampleName').textContent='No sample yet. Plays Saw.';
 }
-var DEF={tone:.75,chorus:.3,delay:.15,reverb:.3,vol:.8,atk:.5,rel:.5,trem:0,trate:.4};
+var DEF={tone:.75,res:0,chorus:.3,delay:.15,reverb:.3,vol:.8,atk:.5,rel:.5,trem:0,trate:.4};
 var knobs={};
 function bindKnob(id,key,fmt){
   var el=$('#'+id),out=$('#'+id+'Out'),ticks=[];
@@ -85,11 +78,10 @@ function bindKnob(id,key,fmt){
 }
 function init(){
   NOTE.forEach(function(n,i){var o=document.createElement('option');o.value=i;o.textContent=n;$('#keySel').appendChild(o);});
-  buildPads();buildKeys();buildPatterns();buildInsts();bindJoy();buildVu();buildBeats();
+  buildPads();buildPatterns();buildInsts();bindJoy();buildVu();buildBeats();
   updatePads();show(padChord(0));showMeta();
   $('#padsView').addEventListener('pointerdown',function(){ensureAudio();},true);
 
-  $$('.seg button[data-view]').forEach(function(b){b.addEventListener('click',function(){setView(b.getAttribute('data-view'));});});
   $$('.tabs3 button').forEach(function(b){b.addEventListener('click',function(){
     var id=b.getAttribute('data-panel');
     $$('.tabs3 button').forEach(function(x){x.setAttribute('aria-selected',String(x===b));});
@@ -149,22 +141,13 @@ function init(){
   $('#keySel').addEventListener('change',circleDraw);
   $('#scaleSel').addEventListener('change',circleDraw);
 
-  $$('#typeBtns .chip').forEach(function(b){b.addEventListener('click',function(){
-    S.kType=b.getAttribute('data-t');
-    $$('#typeBtns .chip').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});
-  });});
-  $$('#extBtns .chip').forEach(function(b){b.addEventListener('click',function(){
-    var e=b.getAttribute('data-e');S.kExt[e]=!S.kExt[e];b.setAttribute('aria-pressed',String(!!S.kExt[e]));
-  });});
-  $('#octDown').addEventListener('click',function(){S.kOct=Math.max(1,S.kOct-1);$('#octVal').textContent=S.kOct;});
-  $('#octUp').addEventListener('click',function(){S.kOct=Math.min(5,S.kOct+1);$('#octVal').textContent=S.kOct;});
-  var hk=$('#holdKeys');hk.classList.add('holdBtn');hk.addEventListener('click',function(){setHold(!S.hold);});
 
   $$('#modeChips .chip').forEach(function(b){b.addEventListener('click',function(){setMode(b.getAttribute('data-m'));});});
   $('#arpRate').addEventListener('change',function(e){S.arpRate=parseInt(e.target.value,10);});
   $('#arpDir').addEventListener('change',function(e){S.arpDir=e.target.value;});
-  function setStage(v,keep){S.stage=v;if(window.suspireReloc)setTimeout(window.suspireReloc,0);var a=document.querySelector('.app');a.classList.toggle('stage',v);$('#dockHandle').setAttribute('aria-expanded',String(!v));if(!keep){try{localStorage.setItem('suspire.stage',v?'1':'0');}catch(e){}}}
+  function setStage(v,keep){S.stage=v;if(window.suspireReloc)setTimeout(window.suspireReloc,0);var a=document.querySelector('.app');a.classList.toggle('stage',v);$('#dockHandle').setAttribute('aria-expanded',String(!v));var db=$('#dockBtn');if(db)db.setAttribute('aria-expanded',String(!v));if(!keep){try{localStorage.setItem('suspire.stage',v?'1':'0');}catch(e){}}}
   (function(){var st=null;try{st=localStorage.getItem('suspire.stage');}catch(e){}setStage(st===null?true:st==='1',true);})();
+  (function(){var b=$('#dockBtn');if(b)b.addEventListener('click',function(){setStage(!S.stage);});})();
   (function(){
     var h=$('#dockHandle'),y0=null,moved=false;
     h.addEventListener('pointerdown',function(e){y0=e.clientY;moved=false;try{h.setPointerCapture(e.pointerId);}catch(_){}});
@@ -193,20 +176,71 @@ function init(){
   $('#recBtn').addEventListener('click',function(){
     ensureAudio();
     if(!loop.playing)loopStart();
-    loop.rec=!loop.rec;if(loop.rec)loop.xyFresh=true;loopUi();
+    loop.rec=!loop.rec;if(loop.rec){loop.xyFresh=true;loop.take=(loop.take||0)+1;}loopUi();
   });
   $('#playBtn').addEventListener('click',function(){if(loop.playing)loopStop();else loopStart();});
   $('#hRec').addEventListener('click',function(){$('#recBtn').click();});
   $('#hPlay').addEventListener('click',function(){$('#playBtn').click();});
   $('#layerBtn').addEventListener('click',function(e){loop.layer=loop.layer===1?2:1;e.currentTarget.textContent='Layer '+loop.layer;e.currentTarget.setAttribute('aria-pressed',String(loop.layer===2));$('#slotInfo').textContent='Recording into layer '+loop.layer+'. Clear only wipes this layer.';});
   $('#clearBtn').addEventListener('click',function(){loop.events=loop.events.filter(function(e){return (e.layer||1)!==loop.layer;});if(!loop.events.length)loop.xy=[];loopUi();});
+  /* Dice: idiomatic loops per scale colour, plus now and then one unexpected step */
+  var DICE={
+    major:[[0,4,5,3],[5,3,0,4],[0,5,3,4],[0,3,4],[1,4,0],[0,2,3,4],[0,3,5,4]],
+    minor:[[0,5,2,6],[0,3,6,2],[0,3,4],[0,6,5,4],[0,2,6,3],[0,5,6,0]],
+    dorian:[[0,3,0,6],[0,3,6,3],[0,6,3,0]],
+    phrygian:[[0,1,0,6],[0,1,2,1],[0,6,1,0]],
+    lydian:[[0,1,0,4],[0,1,4,0],[0,4,1,5]],
+    mixolydian:[[0,6,3,0],[0,4,6,3],[0,3,6,0]]
+  };
+  function diceChain(){
+    var sc=S.scale,set=DICE[sc]||(['harmonic','melodic','phrygdom','hungarian','doubleh','locrian'].indexOf(sc)>=0?DICE.minor:DICE.major);
+    var chain,minorish=sc!=='major'&&sc!=='lydian';
+    if(Math.random()<.75){
+      chain=set[Math.floor(Math.random()*set.length)].slice();
+      if(chain.length>3&&Math.random()<.3){var r=1+Math.floor(Math.random()*(chain.length-1));chain=chain.slice(r).concat(chain.slice(0,r));}
+    }else{
+      chain=[Math.random()<.7?0:5];var n=3+Math.floor(Math.random()*2);
+      while(chain.length<=n){
+        var opts=(NEXT[chain[chain.length-1]]||[0]).filter(function(x){return chain.indexOf(x)<0&&(x!==6||minorish);});
+        if(!opts.length)opts=[0,1,2,3,4,5].filter(function(x){return chain.indexOf(x)<0;});
+        chain.push(opts[Math.floor(Math.random()*opts.length)]);
+      }
+    }
+    if(chain.length>=4&&Math.random()<.3){
+      var pool=[1,2,5].concat(minorish?[6]:[]).filter(function(x){return chain.indexOf(x)<0;});
+      if(pool.length)chain[2]=pool[Math.floor(Math.random()*pool.length)];
+    }
+    return chain;
+  }
+  $('#diceBtn').addEventListener('click',function(){
+    var chain,tries=0;
+    do{chain=diceChain();tries++;}while(pmFromChain(chain).join()===PM.join()&&tries<8);
+    PM=pmFromChain(chain);savePM();updatePads();syncProg();
+    var b=$('#diceBtn');b.classList.remove('spin');void b.offsetWidth;b.classList.add('spin');
+    $('#meta').textContent='New progression \u00B7 '+chain.map(function(d){return padChord(d).name;}).join(' \u00B7 ');
+  });
+  $('#takeBtn').addEventListener('click',function(){
+    var m=-1;loop.events.forEach(function(e){if((e.take||0)>m)m=e.take||0;});
+    if(m<0)return;
+    loop.events=loop.events.filter(function(e){return (e.take||0)!==m;});
+    if(!loop.events.length)loop.xy=[];
+    loopUi();
+  });
   $('#barsSel').addEventListener('change',function(e){loop.bars=parseInt(e.target.value,10);loop.prev=-1e-6;buildBeats();if(loop.playing){loop.t0=ctx.currentTime+.05;}});
   $('#metroBtn').addEventListener('click',function(e){loop.metro=!loop.metro;e.currentTarget.setAttribute('aria-pressed',String(loop.metro));ensureAudio();});
   function setBpm(v){
     v=Math.max(50,Math.min(200,v));
     if(loop.playing&&ctx){var pos=(ctx.currentTime-loop.t0)*S.bpm/60;loop.t0=ctx.currentTime-pos*60/v;}
-    S.bpm=v;$('#bpmVal').textContent=v;applyParams();showMeta();
+    S.bpm=v;$('#bpmVal').textContent=v;$('#hBpmVal').textContent=v;applyParams();showMeta();
   }
+  /* header tempo: drag up/down to change, tap in time to set it */
+  (function(){var b=$('#hBpm'),sy=0,s0=0,moved=false,id=null,taps=[];
+    b.addEventListener('pointerdown',function(e){id=e.pointerId;try{b.setPointerCapture(id);}catch(x){}sy=e.clientY;s0=S.bpm;moved=false;});
+    b.addEventListener('pointermove',function(e){if(e.pointerId!==id)return;var d=Math.round((sy-e.clientY)/5);if(Math.abs(sy-e.clientY)>6)moved=true;if(moved&&d!==S.bpm-s0)setBpm(s0+d);});
+    function up(e){if(e.pointerId!==id)return;id=null;if(moved)return;var t=performance.now();taps=taps.filter(function(x){return t-x<2200;});taps.push(t);
+      if(taps.length>=3){var sum=0;for(var i=1;i<taps.length;i++)sum+=taps[i]-taps[i-1];setBpm(Math.round(60000/(sum/(taps.length-1))));}}
+    b.addEventListener('pointerup',up);b.addEventListener('pointercancel',function(){id=null;});
+  })();
   $('#bpmDown').addEventListener('click',function(){setBpm(S.bpm-2);});
   $('#bpmUp').addEventListener('click',function(){setBpm(S.bpm+2);});
 
@@ -259,6 +293,14 @@ function init(){
     })(si);
   }
   slotUi();
+  /* autosave: the loop and its settings survive a reload (a phone can drop the page under memory pressure) */
+  var AUTOKEY='suspire.auto',autoSig='';
+  function snap(){return {xy:loop.xy.slice(),events:loop.events.map(cp),bars:loop.bars,bpm:S.bpm,key:S.key,scale:S.scale,mode:S.mode,inst:S.inst,swing:S.swing,human:S.human,pm:PM.slice(),drum:{kit:drum.kit,pat:drum.pat,lvl:drum.lvl}};}
+  function autoSave(){try{if(!loop.events.length)return;var j=JSON.stringify(snap());if(j===autoSig)return;autoSig=j;localStorage.setItem(AUTOKEY,j);}catch(e){}}
+  setInterval(autoSave,4000);
+  document.addEventListener('visibilitychange',function(){if(document.hidden)autoSave();});
+  window.addEventListener('pagehide',autoSave);
+  try{var au=JSON.parse(localStorage.getItem(AUTOKEY)||'null');if(au&&au.events&&au.events.length&&!loop.events.length){applySlot(au);autoSig=JSON.stringify(snap());$('#slotInfo').textContent='Restored your last loop.';}}catch(e){}
   $('#storeBtn').addEventListener('click',function(e){
     armed=!armed;e.currentTarget.setAttribute('aria-pressed',String(armed));
     $('#slotInfo').textContent=armed?'Tap a slot to save the current loop and settings.':'Store cancelled.';
@@ -374,6 +416,12 @@ function init(){
   $('#drumBtn').addEventListener('click',function(){setDrums(!drum.on);});
   $('#kitSel').addEventListener('change',function(e){drum.kit=+e.target.value;drumKit();});
   $('#dpatSel').addEventListener('change',function(e){drum.pat=+e.target.value;});
+  /* loop levels: overall and per layer */
+  [['loopLvl','loop'],['lv1','l1'],['lv2','l2']].forEach(function(r){
+    var el=$('#'+r[0]),out=$('#'+r[0]+'Out'),k='suspire.'+r[0];
+    try{var sv=parseFloat(localStorage.getItem(k));if(sv>=0&&sv<=1){LV[r[1]]=sv;el.value=sv;out.textContent=pct(sv);}}catch(e){}
+    el.addEventListener('input',function(){LV[r[1]]=+el.value;out.textContent=pct(LV[r[1]]);try{localStorage.setItem(k,String(LV[r[1]]));}catch(e){}});
+  });
   $('#drumLvl').addEventListener('input',function(e){setDrumCfg(drum.kit,drum.pat,+e.target.value);});
   bindKnob('atk','atk',function(v){return 'x'+mult(v).toFixed(1);});
   bindKnob('rel','rel',function(v){return 'x'+mult(v).toFixed(1);});
@@ -410,22 +458,31 @@ function init(){
   });
   vibeLabel();
 
+
+  /* how-to overlay: first run, then from the ? buttons */
   (function(){
-    var seen=false;try{seen=localStorage.getItem('suspire.seen')==='1';}catch(e){}
-    if(seen)return;var h=$('#hint');
-    function hide(){h.classList.remove('show');try{localStorage.setItem('suspire.seen','1');}catch(e){}document.removeEventListener('pointerdown',hide,true);}
-    setTimeout(function(){h.classList.add('show');},700);
-    setTimeout(hide,9000);
-    document.addEventListener('pointerdown',function(){setTimeout(hide,1500);},{capture:true,once:true});
+    var H=[['TAP A PAD','play a chord'],['PAD + KNOB','hold one, turn the other'],['JOYSTICK','dark / bright, jazzy / sus'],['HOLD A KNOB','choose what it steers'],['DRAG BPM','tempo · tap 3x to set it'],['SOUND NAME','tap for the next sound'],['CHORD SET','key, scale, progression'],['DICE · UNDO','new progression · drop last take'],['REC, PLAY','loop what you play']];
+    var ul=$('#helpList');H.forEach(function(r){var li=document.createElement('li');li.innerHTML='<b></b><span></span>';li.firstChild.textContent=r[0];li.lastChild.textContent=r[1];ul.appendChild(li);});
+    var box=$('#help');
+    function show(){closePick();box.hidden=false;}
+    function hide(){box.hidden=true;try{localStorage.setItem('suspire.help','1');}catch(e){}}
+    $('#helpDone').addEventListener('click',hide);
+    box.addEventListener('click',function(e){if(e.target===box)hide();});
+    $('#hHelp').addEventListener('click',show);
+    $('#sheetHelp').addEventListener('click',function(){$('#sheetDone').click();show();});
+    var seen=false;try{seen=localStorage.getItem('suspire.help')==='1';}catch(e){}
+    if(!seen&&!matchMedia('(prefers-reduced-motion: reduce)').matches)setTimeout(show,2500);else if(!seen)setTimeout(show,600);
   })();
   document.addEventListener('visibilitychange',function(){if(!document.hidden&&ctx&&ctx.state!=='running'){try{ctx.resume();}catch(e){}}});
+  /* an interrupted context (phone call, Siri) may stay silent until the next touch: wake it there too */
+  document.addEventListener('pointerdown',function(){if(ctx&&ctx.state!=='running'){try{ctx.resume();}catch(e){}}},true);
   if('serviceWorker' in navigator&&/^https?:/.test(location.protocol)){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 
   /* ---------- quick buttons (Play layout) ---------- */
   var MODES=['chord','strum','slop','arp','pattern','harp'],MNAME={chord:'Chord',strum:'Strum',slop:'Slop',arp:'Arp',pattern:'Pattern',harp:'Harp'};
   function qUpdate(){
     $('#qKey').innerHTML='<small>Key</small>'+NOTE[S.key];
-    $('#qSound').innerHTML='<small>Sound</small>'+VIBES[vibeIdx].n;
+    $('#qSound').innerHTML='<small>Sound</small>'+VIBES[vibeIdx].n;$('#hSndTxt').textContent=VIBES[vibeIdx].n;
     $('#qMode').innerHTML='<small>Mode</small>'+MNAME[S.mode];
     $('#qJazz').setAttribute('aria-pressed',String(!!S.jazz));
     $('#qDrums').setAttribute('aria-pressed',String(drum.on));
@@ -433,6 +490,7 @@ function init(){
   }
   quickHook=qUpdate;
   $('#qKey').addEventListener('click',function(){var sel=$('#keySel');sel.value=String((S.key+7)%12);sel.dispatchEvent(new Event('change'));qUpdate();});
+  $('#hSnd').addEventListener('click',function(){$('#qSound').click();});
   $('#qSound').addEventListener('click',function(){vibeIdx=(vibeIdx+1)%VIBES.length;applyVibe(VIBES[vibeIdx]);});
   $('#qMode').addEventListener('click',function(){setMode(MODES[(MODES.indexOf(S.mode)+1)%MODES.length]);});
   $('#qJazz').addEventListener('click',function(){S.jazz=!S.jazz;updatePads();show(padChord(0));qUpdate();});
@@ -440,16 +498,18 @@ function init(){
   $('#qHold').addEventListener('click',function(){setHold(!S.hold);});
   qUpdate();
 
-  $('#critBtn').addEventListener('click',function(e){var st=crit.on?(crit.set===1?0:-1):1;if(st===-1){crit.on=false;}else{crit.on=true;crit.set=st;}e.currentTarget.setAttribute('aria-pressed',String(crit.on));e.currentTarget.textContent='Display: '+(!crit.on?'Off':(crit.set===1?'Synthwave':'Machines'));crit.list=[];document.querySelector('.app').classList.toggle('critOn',crit.on);});
+  $('#critBtn').addEventListener('click',function(e){var st=crit.on?(crit.set===1?0:-1):1;if(st===-1){crit.on=false;}else{crit.on=true;crit.set=st;}e.currentTarget.setAttribute('aria-pressed',String(crit.on));e.currentTarget.textContent='Display: '+(!crit.on?'Off':(crit.set===1?'Synthwave':'Abstract'));crit.list=[];document.querySelector('.app').classList.toggle('critOn',crit.on);});
   document.querySelector('.app').classList.add('critOn');
-  (function(){var ap=document.querySelector('.app'),mq=window.matchMedia('(orientation:portrait)'),sq=$('#vizSq');
+  (function(){var ap=document.querySelector('.app'),mq=window.matchMedia('(orientation:portrait)'),lq=window.matchMedia('(orientation:landscape) and (max-height:560px)'),sq=$('#vizSq');
     function reloc(){var on=ap.classList.contains('stage')&&mq.matches,cv=$('#crit'),m=document.querySelector('.master'),
-      cvHome=on?sq:document.querySelector('.screen'),mHome=on?document.querySelector('.tpad'):document.querySelector('.tele');
+      cvHome=on?sq:document.querySelector('.screen'),low=ap.classList.contains('stage')&&lq.matches,mHome=on?document.querySelector('.tpad'):document.querySelector('.tele');
       if(cv.parentNode!==cvHome){cvHome.insertBefore(cv,cvHome.firstChild);crit.cv=null;crit.list=[];}
-      if(m.parentNode!==mHome){mHome.appendChild(m);}
-      var bt=$('#beats'),bHome=on?$('#padsView'):document.querySelector('.screen');if(bt.parentNode!==bHome)bHome.appendChild(bt);
+      /* phone held sideways: the two macro knobs ride in the header, next to the transport */
+      if(low){var hd=document.querySelector('.head'),tp=hd.querySelector('.tport');if(m.parentNode!==hd)hd.insertBefore(m,tp);}
+      else if(m.parentNode!==mHome){mHome.appendChild(m);}
+      var bt=$('#beats'),bHome=on?$('#padsView').parentNode:document.querySelector('.screen');if(bt.parentNode!==bHome)bHome.appendChild(bt);
     }
-    window.suspireReloc=reloc;reloc();(mq.addEventListener?mq.addEventListener('change',reloc):mq.addListener(reloc));
+    window.suspireReloc=reloc;reloc();(mq.addEventListener?mq.addEventListener('change',reloc):mq.addListener(reloc));(lq.addEventListener?lq.addEventListener('change',reloc):lq.addListener(reloc));
     function nv(){$('#vibeBtn').click();}sq.addEventListener('click',nv);sq.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();nv();}});})();
   (function(){var sh=$('#sheet'),body=$('#sheetBody'),btn=$('#setBtn'),sels={key:$('#keySel'),scale:$('#scaleSel'),prog:$('#progSel')};
     function txt(sel){var o=sel.options[sel.selectedIndex];return o?o.text:'';}
@@ -464,7 +524,9 @@ function init(){
     function close(){sh.classList.remove('open');setTimeout(function(){sh.hidden=true;},220);}
     btn.addEventListener('click',open);$('#sheetBg').addEventListener('click',close);$('#sheetDone').addEventListener('click',close);
     Object.keys(sels).forEach(function(k){sels[k].addEventListener('change',label);});label();})();
-  (function(){var n=$('#chordName'),t=$('#chordNotes');function sync(){$('#hcName').textContent=n.textContent;$('#hcNotes').textContent=t.textContent;}
+  (function(){var n=$('#chordName'),t=$('#chordNotes');function fit(){var b=$('#hcName'),box=$('#hdrChord'),w=box.clientWidth;if(w)b.style.fontSize=Math.max(11,Math.min(24,w/(nameUnits(b.textContent)*.64)))+'px';}
+  window.addEventListener('resize',function(){fit();});
+  function sync(){$('#hcName').textContent=n.textContent;fit();$('#hcNotes').textContent=t.textContent;}
     var mo=new MutationObserver(sync);mo.observe(n,{childList:true,characterData:true,subtree:true});mo.observe(t,{childList:true,characterData:true,subtree:true});sync();})();
   (function(){function paint(){var P=DPATS[drum.pat],ee=beatEls;if(!ee.length)return;for(var i=0;i<16;i++){var h=drum.on&&((P.k&&P.k.charAt(i)!=='0')||(P.s&&P.s.charAt(i)!=='0')||(P.c&&P.c.charAt(i)!=='0'));ee[i].classList.toggle('hit',!!h);}}
     setInterval(paint,500);paint();})();
@@ -490,11 +552,51 @@ function init(){
     if(document.fonts&&document.fonts.load){Promise.race([document.fonts.load('700 40px "Pixelify Sans"'),new Promise(function(r){setTimeout(r,700);})]).then(go,go);}else go();})();
   (function(){var ap=document.querySelector('.app'),b=$('#visBtn');function set(v,keep){ap.classList.toggle('vis',v);b.setAttribute('aria-pressed',String(v));crit.list=[];crit.dirty=true;if(!keep){try{localStorage.setItem('suspire.vis',v?'1':'0');}catch(e){}}}
     var st=null;try{st=localStorage.getItem('suspire.vis');}catch(e){}set(st==='1',true);b.addEventListener('click',function(){set(!ap.classList.contains('vis'));});})();
-  bindKnob('tone','tone',pct);
+  bindKnob('tone','tone',pct);bindKnob('res','res',pct);
   bindKnob('chorus','chorus',pct);
   bindKnob('delay','delay',pct);
   bindKnob('reverb','reverb',pct);
-  bindKnob('vol','vol',pct);
+  /* two macro encoders: each steers one sound parameter; tap the label to change which */
+  var MACRO=[['Filter','tone'],['Reso','res'],['Reverb','reverb'],['Delay','delay'],['Chorus','chorus'],['Tremolo','trem'],['Attack','atk'],['Release','rel']],guard=false,macs=[];
+  function makeMacro(n,encId,labId,def){
+    var name='mac'+n,store='suspire.macro'+n,mi=def;
+    try{var sv=parseInt(localStorage.getItem(store),10);if(sv>=0&&sv<MACRO.length)mi=sv;}catch(e){}
+    Object.defineProperty(S,name,{get:function(){return S[MACRO[mi][1]];},set:function(v){knobs[MACRO[mi][1]](v);if(!guard){guard=true;macs.forEach(function(m){if(m!==api)m.redraw();});guard=false;}},enumerable:false});
+    Object.defineProperty(DEF,name,{get:function(){return DEF[MACRO[mi][1]];}});
+    bindKnob(encId,name,pct);
+    var api={redraw:function(){knobs[name](S[name]);}};
+    function label(){$('#'+labId).textContent=MACRO[mi][0];$('#'+encId).setAttribute('aria-label',MACRO[mi][0]+' encoder');}
+    label();
+    api.get=function(){return mi;};
+    api.set=function(i){mi=i;try{localStorage.setItem(store,String(mi));}catch(e){}label();api.redraw();};
+    $('#'+labId).addEventListener('click',function(){openPick(api,$('#'+encId));});
+    (function(){var el=$('#'+encId),tm=null,x0=0,y0=0;
+      el.addEventListener('pointerdown',function(e){x0=e.clientX;y0=e.clientY;clearTimeout(tm);tm=setTimeout(function(){tm=null;openPick(api,el);},480);});
+      el.addEventListener('pointermove',function(e){if(tm&&Math.hypot(e.clientX-x0,e.clientY-y0)>7){clearTimeout(tm);tm=null;}});
+      ['pointerup','pointercancel'].forEach(function(t){el.addEventListener(t,function(){clearTimeout(tm);tm=null;});});
+    })();
+    macs.push(api);
+  }
+  /* pixel picker: hold a knob (or tap its label) to choose what it steers */
+  var pickEl=$('#macPick'),pickFor=null;
+  function closePick(){pickEl.hidden=true;pickFor=null;}
+  function openPick(api,anchor){
+    pickFor=api;pickEl.innerHTML='';
+    MACRO.forEach(function(m,i){var b=document.createElement('button');b.type='button';b.textContent=m[0];b.setAttribute('role','option');
+      if(i===api.get())b.className='on';
+      b.addEventListener('click',function(e){e.stopPropagation();api.set(i);closePick();});pickEl.appendChild(b);});
+    pickEl.hidden=false;
+    var r=anchor.getBoundingClientRect(),w=pickEl.offsetWidth,h=pickEl.offsetHeight,vw=window.innerWidth,vh=window.innerHeight;
+    var x=r.left+r.width/2>vw/2?r.left-w-8:r.right+8;x=Math.max(8,Math.min(vw-w-8,x));
+    var y=Math.max(8,Math.min(vh-h-8,r.top+r.height/2-h/2));
+    pickEl.style.left=x+'px';pickEl.style.top=y+'px';
+  }
+  document.addEventListener('pointerdown',function(e){if(!pickEl.hidden&&!pickEl.contains(e.target))closePick();},true);
+  makeMacro('',  'vol', 'macLab', 0);
+  makeMacro('2', 'vol2','macLab2',1);
+  function redrawMacs(){guard=true;macs.forEach(function(m){m.redraw();});guard=false;}
+  $('#panelSound').addEventListener('pointerup',function(){setTimeout(redrawMacs,0);});
+  $('#panelSound').addEventListener('keyup',redrawMacs);
   $('#sampleRoot').addEventListener('change',function(e){S.sampleRoot=parseInt(e.target.value,10);});
   $('#sampleFile').addEventListener('change',function(e){
     var f=e.target.files&&e.target.files[0];if(!f)return;
@@ -507,14 +609,13 @@ function init(){
     });
   });
 
-  var KMAP={a:0,w:1,s:2,e:3,d:4,f:5,t:6,g:7,y:8,h:9,u:10,j:11},kheld={};
+  var kheld={};
   document.addEventListener('keydown',function(e){
     if(e.repeat||e.metaKey||e.ctrlKey||e.altKey)return;
     var tag=(e.target&&e.target.tagName)||'';
     if(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA')return;
     var key=(e.key||'').toLowerCase(),make=null,el=null,live=false;
-    if(S.view==='pads'&&/^[1-7]$/.test(key)){var d=parseInt(key,10)-1;make=function(){return padCh(d);};el=padEls[d];live=true;}
-    else if(S.view==='keys'&&KMAP.hasOwnProperty(key)){var pc=KMAP[key];make=function(){return keysChord(pc);};el=keyEls[pc];}
+    if(/^[1-7]$/.test(key)){var d=parseInt(key,10)-1;make=function(){return padCh(d);};el=padEls[d];live=true;}
     if(!make||kheld[e.code])return;
     e.preventDefault();
     kheld[e.code]=pressEntry(make,el,live);
@@ -524,7 +625,7 @@ function init(){
   });
   var tele=$('.tele'),app=$('.app'),gl={raf:0,x:0,y:0};
   document.addEventListener('pointermove',function(e){
-    gl.x=e.clientX;gl.y=e.clientY;var ar=app.getBoundingClientRect();app.style.setProperty('--ax',Math.max(-20,Math.min(120,(e.clientX-ar.left)/ar.width*100)).toFixed(1)+'%');app.style.setProperty('--ay',Math.max(-20,Math.min(120,(e.clientY-ar.top)/ar.height*100)).toFixed(1)+'%');
+    gl.x=e.clientX;gl.y=e.clientY;
     if(gl.raf)return;
     gl.raf=requestAnimationFrame(function(){
       gl.raf=0;var r=tele.getBoundingClientRect();
@@ -535,4 +636,5 @@ function init(){
   loopUi();
 }
 init();
+i18nStart();
 })();

@@ -48,7 +48,11 @@ function ensureAudio(){
   revG=ctx.createGain();
   toneF.connect(revG);revG.connect(conv);conv.connect(mix);
   drumF=ctx.createBiquadFilter();drumF.type='lowpass';drumF.frequency.value=12000;drumG=ctx.createGain();drumG.gain.value=drum.lvl;drumF.connect(drumG);drumG.connect(mix);
-  mix.connect(comp);comp.connect(master);master.connect(ctx.destination);
+  /* safety limiter after the compressor: straight up to 0.8, then a soft knee, so loud stacks never clip the speakers or a recording */
+  var lim=ctx.createWaveShaper(),lc=new Float32Array(2049),li,lx,la;
+  for(li=0;li<2049;li++){lx=li/1024-1;la=Math.abs(lx);lc[li]=la<=.8?lx:(lx<0?-1:1)*(.8+.18*Math.tanh((la-.8)/.18));}
+  lim.curve=lc;lim.oversample='2x';
+  mix.connect(comp);comp.connect(lim);lim.connect(master);master.connect(ctx.destination);
   an=ctx.createAnalyser();an.fftSize=512;anBuf=new Uint8Array(an.fftSize);master.connect(an);
   an2=ctx.createAnalyser();an2.fftSize=4096;an2.smoothingTimeConstant=.8;fBuf=new Uint8Array(an2.frequencyBinCount);master.connect(an2);
   applyParams();
@@ -59,6 +63,7 @@ function applyParams(){
   if(!ctx)return;
   var t=ctx.currentTime;
   toneF.frequency.setTargetAtTime(Math.min(18000,400*Math.pow(45,S.tone)*toneMod),t,.03);
+  toneF.Q.setTargetAtTime(.5+S.res*S.res*16,t,.03);
   chorusG.gain.value=S.chorus*.9;
   delayG.gain.value=S.delay*.8;
   delayN.delayTime.value=.75*60/S.bpm;
@@ -79,9 +84,13 @@ var INST={
   brass:{n:'Brass',a:.06,d:.3,s:.85,r:.15,p:.2},
   flute:{n:'Flute',a:.08,d:.3,s:.9,r:.2,p:.33},
   organ:{n:'Organ',a:.008,d:.05,s:1,r:.07,p:.2},
+  choir:{n:'Choir',a:.35,d:.8,s:.85,r:.9,p:.3},
+  bell:{n:'Bell',a:.003,d:2.6,s:.08,r:1.2,p:.26},
+  tape:{n:'Tape Keys',a:.006,d:1.4,s:.25,r:.5,p:.26},
+  pluck:{n:'Pluck',a:.002,d:.45,s:.04,r:.18,p:.3},
   sample:{n:'Sample',a:.004,d:.05,s:1,r:.25,p:.5}
 };
-var active=[],MAXV=34,nbuf=null;
+var active=[],MAXV=20,BUDGET=110,nbuf=null;
 function noiseBuf(){
   if(!nbuf){nbuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);var d=nbuf.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;}
   return nbuf;
@@ -122,6 +131,30 @@ var BUILD={
     var bf=ctx.createBiquadFilter();bf.type='bandpass';bf.frequency.value=Math.min(2600+f*.5,5200);bf.Q.value=.9;
     var bg=ctx.createGain();bg.gain.setValueAtTime(0,t);bg.gain.linearRampToValueAtTime(.05,t+.35);bg.gain.setTargetAtTime(.007,t+.45,.9);
     br.connect(bf);bf.connect(bg);bg.connect(g);br.start(t);src.push(br);
+  },
+  choir:function(f,m,v,t,g,src){
+    var mix=ctx.createGain();mix.gain.value=1;
+    [[760,5,2.4],[1150,6,1.5]].forEach(function(F){var b=ctx.createBiquadFilter();b.type='bandpass';b.frequency.value=F[0];b.Q.value=F[1];var o=ctx.createGain();o.gain.value=F[2];mix.connect(b);b.connect(o);o.connect(g);});
+    var vib=vibNode(5.2,9,t,src,.25,.8);
+    [-9,0,9].forEach(function(d){var o=osc('sawtooth',f,d,.22,mix,t,src);vib.connect(o.detune);});
+  },
+  bell:function(f,m,v,t,g,src){
+    var car=ctx.createOscillator(),mod=ctx.createOscillator(),ig=ctx.createGain();
+    car.type='sine';mod.type='sine';car.frequency.value=f;mod.frequency.value=f*3.5;
+    ig.gain.setValueAtTime(f*(1.2+1.6*v),t);ig.gain.setTargetAtTime(f*.05,t,.5);
+    mod.connect(ig);ig.connect(car.frequency);car.connect(g);car.start(t);mod.start(t);src.push(car,mod);
+    var pg=ctx.createGain();pg.gain.setValueAtTime(.3,t);pg.gain.setTargetAtTime(0,t+.01,.35);pg.connect(g);
+    osc('sine',f*2.76,0,1,pg,t,src);
+  },
+  tape:function(f,m,v,t,g,src){
+    var lp=lpf(Math.min(f*4.5,7000),.5,g);
+    var wob=vibNode(.9,14,t,src,0,.01);
+    var o1=osc('triangle',f,-6,.6,lp,t,src),o2=osc('sine',f*2,5,.18,lp,t,src);wob.connect(o1.detune);wob.connect(o2.detune);
+  },
+  pluck:function(f,m,v,t,g,src){
+    var hi=Math.min(f*9,12000),lp=lpf(hi,.8,g);
+    lp.frequency.setValueAtTime(hi,t);lp.frequency.setTargetAtTime(Math.max(f*1.4,200),t,.09);
+    osc('sawtooth',f,-5,.4,lp,t,src);osc('square',f,5,.18,lp,t,src);
   },
   saw:function(f,m,v,t,g,src){
     var lp=lpf(Math.min(16000,f*(4+4*v)),.6,g);
@@ -197,7 +230,9 @@ function reg(v){
   var now=ctx.currentTime;
   active=active.filter(function(x){return !x.dead();});
   active.push(v);
-  while(active.length>MAXV)active.shift().rel(now);
+  /* a voice costs about as many audio nodes as it has sources: cap both the count and the total, so a piano chord on top of a loop cannot flood the audio thread */
+  var cost=0,i;for(i=0;i<active.length;i++)cost+=active[i].cost||4;
+  while(active.length>1&&(active.length>MAXV||cost>BUDGET)){var o=active.shift();cost-=o.cost||4;o.rel(now);}
 }
 function finish(g,src,t,a,r,dur){
   var done=false,endT=1e9;
@@ -208,16 +243,20 @@ function finish(g,src,t,a,r,dur){
     g.gain.setTargetAtTime(0,rt,r/3);
     var end=rt+r*1.6+.05;endT=end;
     src.forEach(function(n){try{n.stop(end);}catch(e){}});
+    if(src.cleanup)setTimeout(src.cleanup,Math.max(0,end-ctx.currentTime)*1000+150);
+    setTimeout(function(){try{g.disconnect();}catch(e){}if(src.pan){try{src.pan.disconnect();}catch(e){}}},Math.max(0,end-ctx.currentTime)*1000+250);
   }
   if(dur)rel(t+dur);
   return {rel:rel,dead:function(){return ctx.currentTime>endT;}};
 }
+/* slow pitch drift: four shared LFOs, one small gain per voice (a private oscillator per voice was the heaviest part of a chord) */
+var driftLfo=null;
 function driftVoice(src,t){
-  var lfo=ctx.createOscillator(),dg=ctx.createGain(),any=false;
-  lfo.frequency.value=.12+Math.random()*.4;dg.gain.value=3+Math.random()*4;
-  lfo.connect(dg);
+  if(!driftLfo){driftLfo=[.13,.21,.34,.5].map(function(f){var o=ctx.createOscillator();o.frequency.value=f;o.start();return o;});}
+  var dg=ctx.createGain(),any=false;
+  dg.gain.value=3+Math.random()*4;
   src.slice().forEach(function(n){if(n.detune){dg.connect(n.detune);any=true;}});
-  if(any){lfo.start(t);src.push(lfo);}
+  if(any){var L=driftLfo[Math.floor(Math.random()*driftLfo.length)];L.connect(dg);src.cleanup=function(){try{L.disconnect(dg);dg.disconnect();}catch(e){}};}
 }
 function startVoice(m,t,v,dur){
   var useSample=S.inst==='sample'&&S.sample;
@@ -225,7 +264,7 @@ function startVoice(m,t,v,dur){
   var f=mtof(m),g=ctx.createGain(),src=[];
   g.gain.value=0;
   var pan=ctx.createStereoPanner();pan.pan.value=Math.max(-.55,Math.min(.55,(m-64)/44));
-  g.connect(pan);pan.connect(bus);
+  g.connect(pan);pan.connect(bus);src.pan=pan;
   var peak=v*I.p;
   if(useSample){
     var b=ctx.createBufferSource();b.buffer=S.sample;
@@ -237,7 +276,7 @@ function startVoice(m,t,v,dur){
   var A=I.a*mult(S.atk),R=I.r*mult(S.rel);
   g.gain.linearRampToValueAtTime(peak,t+A);
   g.gain.setTargetAtTime(peak*I.s,t+A,I.d/3);
-  var vo=finish(g,src,t,A,R,dur);reg(vo);return vo;
+  var vo=finish(g,src,t,A,R,dur);vo.cost=src.length+2;reg(vo);return vo;
 }
 function startBass(m,t,v,dur){
   var f=mtof(m),g=ctx.createGain(),lp=ctx.createBiquadFilter(),o1=ctx.createOscillator(),o2=ctx.createOscillator();

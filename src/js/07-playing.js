@@ -13,7 +13,7 @@ function playStop(h){
   if(h.rb!=null&&loop.playing){
     var lb=loopBeats(),b=Math.round(h.rb*4)/4;if(b>=lb)b=0;
     var d=Math.min(lb,Math.max(.25,(ctx.currentTime-h.t)*S.bpm/60));
-    loop.events.push({b:b,d:d,notes:h.ch.notes,bass:h.ch.bass,mode:h.mode,deg:h.ch.deg,kpc:h.ch.kpc,vel:h.vel,layer:loop.layer});
+    loop.events.push({b:b,d:d,notes:h.ch.notes,bass:h.ch.bass,mode:h.mode,deg:h.ch.deg,kpc:h.ch.kpc,vel:h.vel,layer:loop.layer,take:loop.take||0});
     loopUi();
   }
 }
@@ -36,7 +36,7 @@ function show(ch){
 }
 function showMeta(){
   var m={chord:'Chord',strum:'Strum',slop:'Slop',arp:'Arp',pattern:'Pattern · '+PATTERNS[S.pattern].n,harp:'Harp'}[S.mode];
-  $('#meta').textContent=(S.view==='pads'?NOTE[S.key]+' '+S.scale+' · ':'')+S.bpm+' BPM · '+m+(S.hold?' · Hold':'');
+  $('#meta').textContent=(NOTE[S.key]+' '+S.scale+' · ')+S.bpm+' BPM · '+m+(S.hold?' · Hold':'');
   if(quickHook)quickHook();
 }
 var quickHook=null;
@@ -67,7 +67,10 @@ function refreshLive(){
   liveSet.forEach(function(en){
     lastVoice=en.ch.notes.slice();
     var ch=en.make();
-    if(ch.sig!==en.ch.sig){playStop(en.h);en.ch=ch;en.h=playStart(ch,en.vel);show(ch);}
+    if(ch.sig!==en.ch.sig){
+      if(en.h.ctl.morph){en.h.ctl.morph(ch.notes,ch.bass);en.h.ch=ch;en.ch=ch;show(ch);}
+      else{playStop(en.h);en.ch=ch;en.h=playStart(ch,en.vel);show(ch);}
+    }
   });
 }
 function bindPointer(el,make,live){

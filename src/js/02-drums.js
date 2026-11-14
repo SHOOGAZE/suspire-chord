@@ -20,13 +20,13 @@ function dNoise(t,type,f,q,gain,dec,dest){
   var sr=ctx.createBufferSource();sr.buffer=noiseBuf();sr.loop=true;
   var fl=ctx.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q;
   var g=ctx.createGain();g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.0001,t+dec);
-  sr.connect(fl);fl.connect(g);g.connect(dest);sr.start(t,Math.random()*.5);sr.stop(t+dec+.05);
+  sr.connect(fl);fl.connect(g);g.connect(dest);sr.start(t,Math.random()*.5);sr.stop(t+dec+.05);sr.onended=function(){try{sr.disconnect();fl.disconnect();g.disconnect();}catch(e){}};
 }
 function dTone(t,type,f0,f1,fdur,gain,dec,dest){
   var o=ctx.createOscillator(),g=ctx.createGain();o.type=type;
   o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+fdur);
   g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.0001,t+dec);
-  o.connect(g);g.connect(dest);o.start(t);o.stop(t+dec+.05);
+  o.connect(g);g.connect(dest);o.start(t);o.stop(t+dec+.05);o.onended=function(){try{o.disconnect();g.disconnect();}catch(e){}};
 }
 function drumHit(v,t,a){
   var K=KITS[drum.kit],d=drumF,lvl=a>1?1:.62;
