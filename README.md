@@ -6,16 +6,19 @@ A chord instrument for your phone: seven pads, one tap per chord, a joystick tha
 
 ## Screenshots
 
-Phone upright: the pixel boot screen, the play layout with drums running, the chord set sheet and the pixel how-to.
+Phone upright: the main screen with the big chord display, the compact play layout with drums running, the chord set sheet and the pixel how-to.
 
 <p>
   <img src="screenshots/main.png" width="24%" alt="Main screen with the big chord display">
-  <img src="screenshots/boot.png" width="24%" alt="Pixel boot screen">
-  <img src="screenshots/pads.png" width="24%" alt="Play layout with drums running">
+  <img src="screenshots/pads.png" width="24%" alt="Compact play layout with drums running">
   <img src="screenshots/chord-set.png" width="24%" alt="Chord set sheet">
   <img src="screenshots/help.png" width="24%" alt="How to play">
 </p>
+
+The pixel boot screen and the Sound and Loop tabs.
+
 <p>
+  <img src="screenshots/boot.png" width="24%" alt="Pixel boot screen">
   <img src="screenshots/sound.png" width="24%" alt="Sound tab">
   <img src="screenshots/loop.png" width="24%" alt="Loop tab">
 </p>
