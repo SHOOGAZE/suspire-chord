@@ -498,25 +498,27 @@ function init(){
   $('#qHold').addEventListener('click',function(){setHold(!S.hold);});
   qUpdate();
 
-  $('#critBtn').addEventListener('click',function(e){var st=crit.on?(crit.set===1?0:-1):1;if(st===-1){crit.on=false;}else{crit.on=true;crit.set=st;}e.currentTarget.setAttribute('aria-pressed',String(crit.on));e.currentTarget.textContent='Display: '+(!crit.on?'Off':(crit.set===1?'Synthwave':'Abstract'));crit.list=[];document.querySelector('.app').classList.toggle('critOn',crit.on);});
+  $('#critBtn').addEventListener('click',function(e){crit.on=!crit.on; /* Chords <-> Scope: one visual page */e.currentTarget.setAttribute('aria-pressed',String(crit.on));e.currentTarget.textContent='Display: '+(crit.on?'Lines':'Chords');document.querySelector('.app').classList.toggle('critOn',crit.on);if(window.suspireReloc)window.suspireReloc();window.dispatchEvent(new Event('resize'));});
   document.querySelector('.app').classList.add('critOn');
-  (function(){var ap=document.querySelector('.app'),mq=window.matchMedia('(orientation:portrait)'),lq=window.matchMedia('(orientation:landscape) and (max-height:560px)'),sq=$('#vizSq');
-    function reloc(){var on=ap.classList.contains('stage')&&mq.matches,cv=$('#crit'),m=document.querySelector('.master'),
-      cvHome=on?sq:document.querySelector('.screen'),low=ap.classList.contains('stage')&&lq.matches,mHome=on?document.querySelector('.tpad'):document.querySelector('.tele');
-      if(cv.parentNode!==cvHome){cvHome.insertBefore(cv,cvHome.firstChild);crit.cv=null;crit.list=[];}
+  (function(){var ap=document.querySelector('.app'),mq=window.matchMedia('(orientation:portrait)'),lq=window.matchMedia('(orientation:landscape) and (max-height:560px)'),ln=window.matchMedia('(orientation:landscape) and (max-height:480px)'),sq=$('#vizSq');
+    function reloc(){var stg=ap.classList.contains('stage'),on=stg&&mq.matches,cv=$('#crit'),m=document.querySelector('.master'),
+      low=stg?lq.matches:(ln.matches&&ap.classList.contains('critOn')),
+      cvHome=(on||low)?sq:document.querySelector('.screen'),mHome=on?document.querySelector('.tpad'):document.querySelector('.tele');
+      if(cv.parentNode!==cvHome){cvHome.insertBefore(cv,cvHome.firstChild);crit.cv=null;}
       /* phone held sideways: the two macro knobs ride in the header, next to the transport */
       if(low){var hd=document.querySelector('.head'),tp=hd.querySelector('.tport');if(m.parentNode!==hd)hd.insertBefore(m,tp);}
       else if(m.parentNode!==mHome){mHome.appendChild(m);}
       var bt=$('#beats'),bHome=on?$('#padsView').parentNode:document.querySelector('.screen');if(bt.parentNode!==bHome)bHome.appendChild(bt);
     }
-    window.suspireReloc=reloc;reloc();(mq.addEventListener?mq.addEventListener('change',reloc):mq.addListener(reloc));(lq.addEventListener?lq.addEventListener('change',reloc):lq.addListener(reloc));
+    window.suspireReloc=reloc;reloc();(mq.addEventListener?mq.addEventListener('change',reloc):mq.addListener(reloc));(lq.addEventListener?lq.addEventListener('change',reloc):lq.addListener(reloc));(ln.addEventListener?ln.addEventListener('change',reloc):ln.addListener(reloc));
     function nv(){$('#vibeBtn').click();}sq.addEventListener('click',nv);sq.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();nv();}});})();
   (function(){var sh=$('#sheet'),body=$('#sheetBody'),btn=$('#setBtn'),sels={key:$('#keySel'),scale:$('#scaleSel'),prog:$('#progSel')};
     function txt(sel){var o=sel.options[sel.selectedIndex];return o?o.text:'';}
     function label(){$('#setTxt').textContent=txt(sels.key)+' '+txt(sels.scale)+' \u00B7 '+txt(sels.prog);}
     window.suspireLabel=label;
+    var SHORT={'Harmonic minor':'Harm. minor','Melodic minor':'Mel. minor','Phrygian dominant':'Phryg. dom.','Lydian dominant':'Lyd. dom.','Hungarian minor':'Hung. minor','Double harmonic':'Dbl. harmonic'};
     function group(title,sel,cls){var g=document.createElement('div');g.className='sg';var h=document.createElement('div');h.className='sgT';h.textContent=title;g.appendChild(h);var w=document.createElement('div');w.className='sgW '+cls;
-      Array.prototype.forEach.call(sel.options,function(o){if(o.hidden)return;var b=document.createElement('button');b.type='button';b.textContent=o.text;b.setAttribute('aria-pressed',String(o.value===sel.value));
+      Array.prototype.forEach.call(sel.options,function(o){if(o.hidden)return;var b=document.createElement('button');b.type='button';b.textContent=(cls==='s'&&SHORT[o.text])||o.text;b.setAttribute('aria-pressed',String(o.value===sel.value));
         b.addEventListener('click',function(){sel.value=o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));label();Array.prototype.forEach.call(w.children,function(c){c.setAttribute('aria-pressed','false');});b.setAttribute('aria-pressed','true');});w.appendChild(b);});
       g.appendChild(w);return g;}
     function build(){body.innerHTML='';body.appendChild(group('Key',sels.key,'k'));body.appendChild(group('Scale',sels.scale,'s'));body.appendChild(group('Progression',sels.prog,'p'));}
@@ -550,7 +552,7 @@ function init(){
         if(e>1.9)end();requestAnimationFrame(f);})(t0);}
     var go=function(){if(!done)run();};
     if(document.fonts&&document.fonts.load){Promise.race([document.fonts.load('700 40px "Pixelify Sans"'),new Promise(function(r){setTimeout(r,700);})]).then(go,go);}else go();})();
-  (function(){var ap=document.querySelector('.app'),b=$('#visBtn');function set(v,keep){ap.classList.toggle('vis',v);b.setAttribute('aria-pressed',String(v));crit.list=[];crit.dirty=true;if(!keep){try{localStorage.setItem('suspire.vis',v?'1':'0');}catch(e){}}}
+  (function(){var ap=document.querySelector('.app'),b=$('#visBtn');function set(v,keep){ap.classList.toggle('vis',v);b.setAttribute('aria-pressed',String(v));if(!keep){try{localStorage.setItem('suspire.vis',v?'1':'0');}catch(e){}}}
     var st=null;try{st=localStorage.getItem('suspire.vis');}catch(e){}set(st==='1',true);b.addEventListener('click',function(){set(!ap.classList.contains('vis'));});})();
   bindKnob('tone','tone',pct);bindKnob('res','res',pct);
   bindKnob('chorus','chorus',pct);

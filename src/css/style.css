@@ -990,7 +990,7 @@ button,.pad,.bk,.joy,.chip,.enc,.handle,.seg{-webkit-user-select:none;user-selec
 .joy .r{right:8px}
 .screen>.tags{position:relative}
 .app.stage.critOn .screen .wave{display:none}
-#crit{position:relative;inset:auto;width:100%;height:58px;display:block;pointer-events:none;z-index:auto;order:5}
+#crit{position:relative;inset:auto;width:100%;height:104px;display:block;pointer-events:none;z-index:auto;order:5}
 .screen>*:not(#crit){position:relative;z-index:auto}
 .app:not(.critOn) #crit{display:none}
 .app.critOn .screen .wave{display:none}
@@ -1202,6 +1202,8 @@ button,.pad,.bk,.joy,.chip,.enc,.handle,.seg{-webkit-user-select:none;user-selec
 .sgW.k{grid-template-columns:repeat(6,minmax(0,1fr))}
 .sgW.s{grid-template-columns:repeat(3,minmax(0,1fr))}
 .sgW.p{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sgW.s button:last-child:nth-child(3n+1){grid-column:1/-1}
+.sgW.s button,.sgW.p button{min-height:38px;font-size:13.5px}
 .sgW button{
   min-height:42px;
   padding:6px 8px;
@@ -1212,7 +1214,7 @@ button,.pad,.bk,.joy,.chip,.enc,.handle,.seg{-webkit-user-select:none;user-selec
   font:500 14px var(--sans);
   text-align:center;
 }
-.sgW button[aria-pressed=true]{color:#FFB3D6;border-color:rgba(240,80,154,.6);background:rgba(240,80,154,.12)}
+.sgW button[aria-pressed=true]{color:#FFD1E6;border-color:rgba(240,80,154,.8);background:rgba(240,80,154,.26);font-weight:600}
 .splash{position:fixed;inset:0;z-index:100;background:#000;transition:opacity .45s;display:block}
 .splash.out{opacity:0;pointer-events:none}
 .splash canvas{display:block}
@@ -1272,7 +1274,9 @@ button,.pad,.bk,.joy,.chip,.enc,.handle,.seg{-webkit-user-select:none;user-selec
 #hSnd small::after{content:" \25B8";opacity:.55}
 #hSnd:active small{opacity:.7}
 .app:not(.stage) .screen{align-content:stretch;grid-template-rows:auto auto auto auto minmax(60px,1fr) auto}
-.app:not(.stage) .screen #crit{height:100%;min-height:60px;contain:size}
+.app:not(.stage) .screen #crit{position:absolute;inset:0;height:100%;min-height:0;contain:size;z-index:0}
+/* Scope: the whole display belongs to the visual page; the text stays hidden but keeps its space so the screen does not resize */
+.app.critOn:not(.stage) .screen .meta,.app.critOn:not(.stage) .screen .notes,.app.critOn:not(.stage) .screen .nxt{visibility:hidden}
 .app:not(.stage) .nxtrow .vibeBtn{display:none}
 .app:not(.stage) .nxt{font-size:11px;color:#FF8CC4}
 .screw{
@@ -1601,3 +1605,85 @@ button,.pad,.bk,.joy,.chip,.enc,.handle,.seg{-webkit-user-select:none;user-selec
 /* the two stand-alone chips sit apart from the sliders and knobs above them */
 #critBtn{margin-top:18px;justify-self:start}
 #numBtn{margin-top:20px}
+:root[lang=ru] .sgW.s button{font-size:12px;padding:5px 2px;overflow-wrap:normal;line-height:1.15}
+
+/* Scope: the chord name moves up into the header, right of the "?" button, so nothing sits on the animation */
+.app.critOn:not(.stage) .screen>.chord{visibility:hidden}
+.app.critOn:not(.stage) .hdrChord{display:flex;flex-direction:column;justify-content:center;flex:1;min-width:0;margin:0 4px 0 2px}
+.app.critOn:not(.stage) .hdrChord b{font:700 22px/1 var(--sans);letter-spacing:-.02em;color:#F7B3D3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app.critOn:not(.stage) .hdrChord span{display:none}
+.app.critOn:not(.stage) .screen .beats{display:none}
+
+/* very low landscape (phone sideways inside a preview / browser bars): tighten the left column so nothing is cut off */
+@media (orientation:landscape) and (max-height:360px){
+  .app.stage .screen{grid-template-rows:42px}
+  .app.stage .screen #crit{height:42px}
+  .app.stage .screen .chord{font-size:26px}
+  .app.stage .quick{gap:4px}
+  .app.stage .quick .chip,.quick .chip{min-height:30px;padding:0 4px;font-size:13px;line-height:1;gap:0}
+  .app.stage .quick .chip::after{bottom:1px}
+  .app.stage #latchBtn{min-height:26px}
+  .app.stage .joy{max-width:clamp(64px,calc(100dvh - 232px),104px)}
+  .app.stage .head>.master .mk{width:38px;height:38px}
+  .app{padding-bottom:max(6px,env(safe-area-inset-bottom,0px))}
+}
+
+/* phone sideways with the extra panels open: a slim display strip, the tabs and their panel on the left (they scroll on their own), the pads big on the right; the page itself never scrolls */
+@media (orientation:landscape) and (max-height:480px){
+  .app:not(.stage){min-height:100dvh;box-sizing:border-box;grid-template-rows:auto auto auto;gap:6px 14px;padding-top:6px}
+  .app:not(.stage) .head{padding-block:0}
+  .app:not(.stage) .tele{grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
+  .app:not(.stage) .screen{min-height:0;height:74px;margin:2px}
+  .app:not(.stage) .tele .master{display:flex;flex-direction:row;align-items:center;gap:4px;padding:0 4px}
+  .app:not(.stage) .tele .master .mk{display:flex;align-items:center;justify-content:center;width:44px;height:44px}
+  .app:not(.stage) .tele .master .klab,.app:not(.stage) .tele .master output,.app:not(.stage) .tele .master label{display:none!important}
+  .app:not(.stage) .pads{grid-auto-rows:clamp(48px,calc((100dvh - 196px) / 2),104px)}
+}
+
+/* stage, phone upright: every control in the bar under the header has the same height and the same centre line */
+.app.stage .bar{align-items:center}
+.app.stage .bar>*{height:42px;min-height:42px;box-sizing:border-box;align-self:center}
+.app.stage .bar .chip,.app.stage #setBtn,.app.stage #padEdit,.app.stage #dockBtn,.app.stage #diceBtn,.app.stage #takeBtn{display:inline-flex;align-items:center;justify-content:center;line-height:1;padding-block:0;margin:0;transform:none}
+.app.stage #dockBtn{min-width:44px;padding-inline:0}
+.app.stage #dockBtn svg{display:block;margin:0}
+.app.stage #padsView .bar{justify-content:space-between;gap:6px}
+.app.stage #padsView .bar #setBtn{flex:1 1 auto;min-width:0}
+@media (orientation:portrait){
+  .app.stage .pads{padding-inline:0}
+}
+/* the same bar with the extra panels open */
+.app:not(.stage) .bar{align-items:center}
+.app:not(.stage) .bar>*{height:40px;min-height:40px;box-sizing:border-box;align-self:center}
+.app:not(.stage) .bar .chip,.app:not(.stage) #setBtn,.app:not(.stage) #padEdit,.app:not(.stage) #dockBtn,.app:not(.stage) #diceBtn,.app:not(.stage) #takeBtn{display:inline-flex;align-items:center;justify-content:center;line-height:1;padding-block:0;margin:0}
+.app:not(.stage) #dockBtn{min-width:44px;padding-inline:0}
+
+/* phone held sideways, play mode: no big screen. The header looks like the portrait one (small scene, chord name, knobs, transport) and the room under it goes to the joystick and the pads */
+@media (orientation:landscape) and (max-height:560px){
+  .app.stage .brand,.app.stage .helpBtn,.app.stage .tele,.app.stage #visBtn{display:none!important}
+  .app.stage .vizSq{display:block;flex:none;cursor:pointer;width:48px;height:48px;margin:-2px 0 -2px 2px;border:0;background:none;box-shadow:none;border-radius:0;overflow:visible}
+  .app.stage .vizSq #crit{position:static;width:100%;height:100%;min-height:0;display:block}
+  .app.stage .head{gap:8px}
+  .app.stage .hdrChord{display:flex;flex-direction:column;justify-content:center;flex:1;min-width:0;margin-left:2px}
+  .app.stage .hdrChord b{font:700 26px/1 var(--sans);letter-spacing:-.02em;color:#F1ECF2}
+  .app.stage .hdrChord span{display:none}
+  .app.stage .head>.master{margin:0 6px 0 0}
+  .app.stage{grid-template-areas:"head head" "dock deck";grid-template-rows:auto minmax(0,1fr)}
+  .app.stage .dock{align-self:stretch}
+  .app.stage .panels>#panelPerf{align-content:center;height:100%}
+  .app.stage .joy{max-width:clamp(86px,calc(100dvh - 150px),176px)}
+  .app.stage #keySel,.app.stage #scaleSel,.app.stage #progSel{display:none}
+  .app.stage .quick .chip{min-height:clamp(34px,calc((100dvh - 150px) / 3.4),52px)}
+  .app.stage .quick{gap:6px}
+  .app.stage .joyLabel{display:none}
+}
+/* sideways with the panels open: when the line-art scene is on, it shrinks into the header like in play mode and the strip below disappears */
+@media (orientation:landscape) and (max-height:480px){
+  .app.critOn:not(.stage) .tele{display:none}
+  .app.critOn:not(.stage) .vizSq{display:block;flex:none;cursor:pointer;width:46px;height:46px;margin:-2px 0 -2px 2px}
+  .app.critOn:not(.stage) .vizSq #crit{position:static;width:100%;height:100%;min-height:0;display:block}
+  .app.critOn:not(.stage) .head>.master{display:flex;align-items:center;gap:4px;margin:0 6px 0 0;padding:0;border:0;background:none;box-shadow:none;flex:none}
+  .app.critOn:not(.stage) .head>.master .mk{display:flex;align-items:center;justify-content:center;width:44px;height:44px}
+  .app.critOn:not(.stage) .head>.master .klab,.app.critOn:not(.stage) .head>.master output,.app.critOn:not(.stage) .head>.master label{display:none!important}
+  .app.critOn:not(.stage) .head>.master .enc.mid{--kr:19px;--cap:28px;width:44px;height:44px}
+  .app.critOn:not(.stage){grid-template-rows:auto auto}
+}

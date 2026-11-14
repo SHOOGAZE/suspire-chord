@@ -6,27 +6,35 @@ A chord instrument for your phone: seven pads, one tap per chord, a joystick tha
 
 ## Screenshots
 
-Phone upright: the main screen with the big chord display, the compact play layout with drums running, the chord set sheet and the pixel how-to.
+Phone upright: the main screen with the Lines display and with the Chords display, the compact play layout with drums running and the chord set sheet.
 
 <p>
-  <img src="screenshots/main.png" width="24%" alt="Main screen with the big chord display">
+  <img src="screenshots/main.png" width="24%" alt="Main screen, Lines display">
+  <img src="screenshots/chords.png" width="24%" alt="Main screen, Chords display">
   <img src="screenshots/pads.png" width="24%" alt="Compact play layout with drums running">
   <img src="screenshots/chord-set.png" width="24%" alt="Chord set sheet">
-  <img src="screenshots/help.png" width="24%" alt="How to play">
 </p>
 
-The pixel boot screen and the Sound and Loop tabs.
+The how-to, the pixel boot screen and the Sound and Loop tabs.
 
 <p>
+  <img src="screenshots/help.png" width="24%" alt="How to play">
   <img src="screenshots/boot.png" width="24%" alt="Pixel boot screen">
   <img src="screenshots/sound.png" width="24%" alt="Sound tab">
   <img src="screenshots/loop.png" width="24%" alt="Loop tab">
 </p>
 
-Phone held sideways: the display and all seven pads stay on screen.
+Phone held sideways: the scene shrinks into the header and all seven pads stay on screen.
 
 <p>
-  <img src="screenshots/landscape.png" width="70%" alt="Landscape layout">
+  <img src="screenshots/landscape.png" width="48%" alt="Landscape layout, Lines display">
+  <img src="screenshots/landscape-chords.png" width="48%" alt="Landscape layout, Chords display">
+</p>
+
+The Display button switches the chord screen to **Lines**: seven thin-line scenes that draw the chord itself (breathing rings, circle of fifths, voice threads, interval arcs, voice leading, a twelve-petal bloom, interval-ratio figures). The scene follows the chord degree.
+
+<p>
+  <img src="screenshots/lines.png" width="90%" alt="The seven Lines scenes">
 </p>
 
 ## Playing

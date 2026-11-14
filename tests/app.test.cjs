@@ -111,12 +111,12 @@ test('pad names stay inside their pads: every scale, Jazz on and off, play and m
   }
 });
 
-test('landscape keeps the display and all pads on screen', async () => {
+test('landscape play mode: scene in the header, all pads on screen', async () => {
   const t = await launch({ width: 812, height: 375 });
   try {
     const ok = await t.page.evaluate(() => {
-      const tele = document.querySelector('.tele').getBoundingClientRect();
-      return tele.width > 100 && [...document.querySelectorAll('.pad:not(.hold)')].every((p) => { const r = p.getBoundingClientRect(); return r.bottom <= innerHeight + 1 && r.right <= innerWidth + 1; });
+      const v = document.querySelector('#vizSq').getBoundingClientRect(), tele = document.querySelector('.tele').getBoundingClientRect();
+      return v.width > 30 && tele.width === 0 && [...document.querySelectorAll('.pad:not(.hold)')].every((p) => { const r = p.getBoundingClientRect(); return r.bottom <= innerHeight + 1 && r.right <= innerWidth + 1; });
     });
     assert.ok(ok);
   } finally { await t.close(); }
