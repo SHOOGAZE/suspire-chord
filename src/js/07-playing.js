@@ -67,7 +67,10 @@ function refreshLive(){
   liveSet.forEach(function(en){
     lastVoice=en.ch.notes.slice();
     var ch=en.make();
-    if(ch.sig!==en.ch.sig){playStop(en.h);en.ch=ch;en.h=playStart(ch,en.vel);show(ch);}
+    if(ch.sig!==en.ch.sig){
+      if(en.h.ctl.morph){en.h.ctl.morph(ch.notes,ch.bass);en.h.ch=ch;en.ch=ch;show(ch);}
+      else{playStop(en.h);en.ch=ch;en.h=playStart(ch,en.vel);show(ch);}
+    }
   });
 }
 function bindPointer(el,make,live){

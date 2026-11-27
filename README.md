@@ -10,7 +10,7 @@ A single-file chord instrument for the phone: seven pads, one tap per chord, and
 
 - **Pads**: the seven chords of the chosen key and scale, one tap each. Every chord takes the inversion nearest to the last one, so progressions glide without any theory
 - **Joystick**: chord colour on two axes, dark / bright and jazzy / sus; Latch keeps it where you leave it
-- **Sound**: a Suspire voice (three detuned saws over a sub, a slow filter that opens like an exhale), eight instruments or your own sample, filter, chorus, delay and reverb, two macro encoders
+- **Sound**: a Suspire voice (three detuned saws over a sub, a slow filter that opens like an exhale), twelve instruments or your own sample, filter, chorus, delay and reverb, two macro encoders
 - **Vibes**: one tap sets instrument, effects, tempo, kit and pattern (Suspire, Dream, Lo-fi, Night drive, Hymn, Cinema)
 - **Scales and modes**: 13 scales; Chord, Strum, Slop, Arp, Pattern and Harp playing modes; a circle of fifths
 - **Rhythm and loop**: three drum kits and eight patterns locked to a looper with two layers, memory slots, mutate and undo

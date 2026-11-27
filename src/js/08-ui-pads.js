@@ -13,7 +13,7 @@ function romanFor(d){
 function degLabel(d){var r=romanFor(d),q=r.indexOf('\u00B0')>=0?'\u00B0':r.indexOf('+')>=0?'+':(r===r.toLowerCase()?'m':'');return (d+1)+q;}
 var NEXT=[[3,4,5,1],[4,3,6,0],[5,3,1,0],[4,0,1,5],[0,5,3,1],[3,1,4,0],[0,2,5,4]];
 var padEls=[],PMKEY='suspire.padmap',PM=[0,1,2,3,4,5,6];
-var PROGS=[['Free',[0,1,2,3,4,5,6]],['I V vi IV',[0,4,5,3]],['vi IV I V',[5,3,0,4]],['I vi IV V',[0,5,3,4]],['I IV V',[0,3,4]],['ii V I',[1,4,0]],['I iii IV V',[0,2,3,4]],['i VI III VII',[0,5,2,6]],['I V vi iii IV',[0,4,5,2,3]]];
+var PROGS=[['Free',[0,1,2,3,4,5,6]],['I V vi IV',[0,4,5,3]],['vi IV I V',[5,3,0,4]],['I vi IV V',[0,5,3,4]],['I IV V',[0,3,4]],['ii V I',[1,4,0]],['I iii IV V',[0,2,3,4]],['i VI III VII',[0,5,2,6]],['I V vi iii IV',[0,4,5,2,3]],['IV V iii vi',[3,4,2,5]],['I vi ii V',[0,5,1,4]],['vi V IV',[5,4,3]],['i VII VI',[0,6,5]],['i iv VII III',[0,3,6,2]]];
 function pmValid(a){return Array.isArray(a)&&a.length===7&&a.every(function(x){return x>=0&&x<7&&x%1===0;});}
 try{var pmRaw=JSON.parse(localStorage.getItem(PMKEY)||'null');if(pmValid(pmRaw))PM=pmRaw;}catch(e){}
 function savePM(){try{localStorage.setItem(PMKEY,JSON.stringify(PM));}catch(e){}}

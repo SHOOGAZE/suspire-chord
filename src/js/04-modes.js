@@ -24,8 +24,8 @@ function chordOn(notes,mode,bass,vel){
   vel=vel||.85;
   var c={vs:[],tm:null};
   var now=ctx.currentTime+.01;
-  function add(m,t,v,d){if(S.human>0){t+=Math.random()*S.human*.045;v*=1-Math.random()*S.human*.4;}var x=startVoice(m,t,v,d);if(!d)c.vs.push(x);return x;}
-  function addBass(t,d){if(S.bassLvl>0&&bass!=null){var x=startBass(bass,t,.9*S.bassLvl,d);if(!d)c.vs.push(x);}}
+  function add(m,t,v,d){if(S.human>0){t+=Math.random()*S.human*.045;v*=1-Math.random()*S.human*.4;}var x=startVoice(m,t,v,d);if(!d){x.m=m;c.vs.push(x);}return x;}
+  function addBass(t,d){if(S.bassLvl>0&&bass!=null){var x=startBass(bass,t,.9*S.bassLvl,d);if(!d){x.isBass=true;c.vs.push(x);}}}
   if(mode==='chord'){
     addBass(now);notes.forEach(function(m){add(m,now,vel);});
   }else if(mode==='strum'){
@@ -59,6 +59,31 @@ function chordOn(notes,mode,bass,vel){
     };
     tick2();c.tm=setInterval(tick2,25);
   }
+  /* the joystick changes the chord while it is held: keep common notes sounding, release the ones that left, fade the new ones in.
+     The arp and pattern keep their place in the bar instead of starting over. */
+  function target(nn){
+    if(mode!=='harp')return nn.slice();
+    var L=[];
+    for(var o=0;o<4;o++)nn.forEach(function(m){var x=m-12+12*o;if(x>=36&&x<=96&&L.indexOf(x)<0)L.push(x);});
+    return L.sort(function(a,b){return a-b;});
+  }
+  c.morph=function(nn,nb){
+    var t=ctx.currentTime+.01;
+    notes=nn.slice();
+    if(mode==='arp'){seq=arpSeq(notes);bass=nb;return;}
+    if(mode==='pattern'){bass=nb;return;}
+    var want=target(nn),have=[];
+    c.vs=c.vs.filter(function(x){
+      if(x.isBass)return true;
+      if(want.indexOf(x.m)>=0){have.push(x.m);return true;}
+      x.rel(t);return false;
+    });
+    want.forEach(function(m){if(have.indexOf(m)<0)add(m,t,vel*.9);});
+    if(nb!==bass){
+      c.vs=c.vs.filter(function(x){if(x.isBass){x.rel(t);return false;}return true;});
+      bass=nb;addBass(t);
+    }
+  };
   c.stop=function(){
     if(c.tm){clearInterval(c.tm);c.tm=null;}
     var t=ctx.currentTime;

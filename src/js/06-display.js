@@ -1,110 +1,149 @@
-/* ---------- neon critters (one per pad) ---------- */
-var crit={list:[],cv:null,cx:null,w:0,h:0,on:true,dirty:false,set:1};
+/* ---------- LINES: our own thin-line scenes (one per chord degree), drawn on #crit ---------- */
+var crit={q:0,ms:0,nf:0,fa:0,src:null,nt:[48,52,55],cv:null,cx:null,on:true,hit:-1e5,hv:.8,sc:1,last:-1,t0:0,vy:[],key:'',cur:null,prev:null};
 var CRIT_RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-function critSpawn(type,vel,notes){
-  if(!crit.on||CRIT_RM)return;
-  if(!crit.cv){crit.cv=document.getElementById('crit');if(!crit.cv)return;crit.cx=crit.cv.getContext('2d');}
-  var w=crit.cv.clientWidth||300;
-  if(crit.list.length>=4)crit.list.shift();
-  var dir=Math.random()<.5?-1:1;
-  crit.list.push({type:type%7,born:performance.now(),life:1900+Math.random()*500,x:w*(.18+Math.random()*.64),dir:dir,v:.7+.4*(vel||.8),ph:Math.random()*6,notes:notes||null,sv:[Math.random(),Math.random(),Math.random(),Math.random()],vel:vel||.8});
+var OPC={B:'#B08CFF',G:'#FF4FA3',R:'#FF9A7A',W:'#FFE3F1',D:'rgba(255,111,181,.3)',P:'#F7B3D3'}; /* violet, hot pink, coral, cream, dim pink */
+var SPN=64,SPV=[],OPS='"DM Sans",ui-sans-serif,system-ui,sans-serif';
+function critSpawn(type,vel){crit.hit=performance.now();crit.hv=vel||.8;crit.sc=((type%7)+7)%7;}
+function opL(c,p,col,lw,close){c.strokeStyle=col;c.lineWidth=lw||1.2;c.beginPath();c.moveTo(p[0],p[1]);for(var i=2;i<p.length;i+=2)c.lineTo(p[i],p[i+1]);if(close)c.closePath();c.stroke();}
+var _fT='';
+function opT(c,s,x,y,sz,col,wt,al){if(c.canvas.clientWidth<130&&sz<18)return;
+  var f=(wt||200)+' '+Math.round(sz)+'px '+OPS;if(f!==c.font&&f!==_fT)c.font=f;_fT=f;c.fillStyle=col;c.textAlign=al||'left';c.textBaseline='alphabetic';c.fillText(s,x,y);}
+function opM(c,s,x,y,col,al){if(c.canvas.clientWidth<130)return; /* too small for captions */
+  c.font='500 8px "DM Mono",ui-monospace,monospace';c.fillStyle=col;c.textAlign=al||'left';c.textBaseline='alphabetic';c.fillText(s,x,y);}
+function opC(c,x,y,r,col,lw){c.strokeStyle=col;c.lineWidth=lw||1.2;c.beginPath();c.arc(x,y,Math.max(.5,r),0,6.2832);c.stroke();}
+function opBox(c,x,y,w,h,col,lw){c.strokeStyle=col;c.lineWidth=lw||1;c.strokeRect(Math.round(x)+.5,Math.round(y)+.5,w,h);}
+function opCube(c,x,y,r,col){var p=[],i,a;for(i=0;i<6;i++){a=(-90+60*i)*Math.PI/180;p.push(x+r*Math.cos(a),y+r*Math.sin(a));}
+  opL(c,p,col,1.2,true);for(i=1;i<6;i+=2)opL(c,[x,y,p[i*2],p[i*2+1]],col,1);}
+function opNm(m){return NOTE[((m%12)+12)%12].replace('#','♯');}
+/* Each scene draws the chord itself: rings that breathe, the circle of fifths, voice threads, interval arcs, a bloom, ratio figures */
+var LISR=[[1,1],[16,15],[9,8],[6,5],[5,4],[4,3],[7,5],[3,2],[8,5],[5,3],[7,4],[15,8]];
+var FIF=function(pc){return (pc*7)%12;};
+/* 0 BREATH: one ring per chord note, swelling like a sigh */
+function scBreath(c,w,h,d){
+  var cx=w/2,cy=h/2,u=Math.min(w,h)*.5,cols=[OPC.B,OPC.G,OPC.R,OPC.P],n=d.nt.length,i;
+  var ex=Math.min(1,d.age/1700);if(ex<1)opC(c,cx,cy,u*(.2+.8*ex),OPC.G,1);
+  for(i=0;i<n;i++){
+    var m=d.nt[i],e=d.pc[((m%12)+12)%12],R=u*(.2+.62*(i+1)/n)*(1+.05*Math.sin(d.t*1.1+i*.9)+.16*d.pulse+.1*e),a=d.t*(.35+.12*i)+i*2;
+    opC(c,cx,cy,R,cols[i%4],1.2);
+    var px=cx+Math.cos(a)*R,py=cy+Math.sin(a)*R;opC(c,px,py,3,OPC.W,1.2);opM(c,opNm(m),px+(Math.cos(a)>=0?6:-6),py+3,cols[i%4],Math.cos(a)>=0?'left':'right');
+  }
+  opC(c,cx,cy,2,OPC.W,1.4);
 }
-/* pixel machines: R(x,y,w,h) lit cells, D(x,y,w,h) dark holes; f = 0/1 frame, q = 0..3 phase */
-var CRITS=[
-  function robot(R,D,f,q){if(f)R(7,0,1,1);R(4,1,6,3);D(5,2,1,1);D(8,2,1,1);R(6,4,2,1);R(3,5,8,3);D(6,6,2,1);
-    if(f){R(1,5,1,3);R(12,6,1,3);R(4,8,2,3);R(8,8,2,2);R(8,10,3,1);}else{R(1,6,1,3);R(12,5,1,3);R(3,8,2,2);R(9,8,2,3);R(3,10,3,1);}},
-  function drone(R,D,f,q){R(5,5,4,2);D(6,6,2,1);R(2,4,3,1);R(9,4,3,1);
-    if(f){R(1,3,4,1);R(9,3,4,1);}else{R(2,3,2,1);R(10,3,2,1);R(5,3,4,1);}
-    R(5,7,1,2);R(8,7,1,2);if(q>1)R(6,9,2,1);},
-  function cassette(R,D,f,q){R(1,2,12,8);D(3,3,8,3);D(4,8,6,1);
-    if(f){R(4,3,1,1);R(6,3,1,1);R(5,4,1,1);R(4,5,1,1);R(6,5,1,1);R(8,3,1,1);R(10,3,1,1);R(9,4,1,1);R(8,5,1,1);R(10,5,1,1);}
-    else{R(5,3,1,3);R(4,4,3,1);R(9,3,1,3);R(8,4,3,1);}},
-  function tower(R,D,f,q){R(6,2,2,9);R(5,10,4,1);R(4,10,6,1);D(6,5,2,1);D(6,8,2,1);if(f)R(6,0,2,2);else R(6,1,2,1);
-    if(f){R(2,2,1,5);R(11,2,1,5);R(0,3,1,3);R(13,3,1,3);}else{R(4,3,1,3);R(9,3,1,3);}},
-  function alien(R,D,f,q){R(3,1,8,5);R(3,0,1,1);R(10,0,1,1);D(5,3,1,1);D(8,3,1,1);D(6,5,2,1);
-    if(f){R(1,6,2,1);R(11,6,2,1);R(4,6,2,2);R(8,6,2,2);}else{R(2,6,2,2);R(10,6,2,2);R(5,6,1,2);R(8,6,1,2);}},
-  function radar(R,D,f,q){R(1,1,12,9);D(2,2,10,7);R(7,6,1,1);R(3,3,1,1);R(10,8,1,1);
-    if(q===0)R(7,3,1,3);else if(q===1){R(8,5,1,1);R(9,4,1,1);R(10,3,1,1);}else if(q===2)R(8,6,4,1);else{R(8,7,1,1);R(9,8,1,1);}
-    if(q===1)R(9,3,1,1);if(q===3)R(10,3,1,1);},
-  function chip(R,D,f,q){R(3,3,8,5);D(5,4,4,3);if(f)R(6,5,2,1);R(4,2,1,1);R(6,2,1,1);R(8,2,1,1);R(10,2,1,1);R(2,4,1,1);R(11,5,1,1);
-    if(f){R(3,8,1,2);R(6,8,1,2);R(9,8,1,2);R(12,8,1,1);}else{R(2,8,1,1);R(5,8,1,2);R(8,8,1,2);R(11,8,1,2);}}
-];
-/* synthwave set: neon wireframes, drawn at ~50 units tall, origin bottom-centre */
-var LZ=420,PK='#FF6FB5',VL='#B08CFF',SV=[.5,.5,.5,.5];
-function swL(c,p){c.beginPath();c.moveTo(p[0],p[1]);for(var i=2;i<p.length;i+=2)c.lineTo(p[i],p[i+1]);c.stroke();}
-function swWire(c,V,E,t,cy,sc,tilt){
-  var cy1=Math.cos(t),sy=Math.sin(t),cx=Math.cos(tilt),sx=Math.sin(tilt),P=V.map(function(v){
-    var x=v[0]*cy1+v[2]*sy,z=-v[0]*sy+v[2]*cy1,y=v[1]*cx-z*sx;z=v[1]*sx+z*cx;
-    return [x*sc,cy+y*sc,z];});
-  E.forEach(function(e){var a=P[e[0]],b=P[e[1]],back=(a[2]+b[2])/2<0;c.strokeStyle=back?VL:PK;c.globalAlpha=(c.globalAlpha||1);swL(c,[a[0],a[1],b[0],b[1]]);});
+/* 2 THREADS: every voice is a thread; when the chord changes they glide to their new pitch */
+function scThreads(c,w,h,d){
+  var n=Math.min(4,d.nt.length),cols=[OPC.P,OPC.G,OPC.B,OPC.R],i,x;
+  for(i=0;i<n;i++){
+    var m=d.nt[n-1-i+(d.nt.length-n)],ty=h*(.86-Math.max(0,Math.min(1,(m-45)/26))*.72);
+    crit.vy[i]=crit.vy[i]==null?ty:crit.vy[i]+(ty-crit.vy[i])*.12;
+    var y0=crit.vy[i],e=d.pc[((m%12)+12)%12],amp=h*(.012+.05*e+.04*d.pulse),f=2+((m%12)/12)*3,p=[];
+    for(x=0;x<=w;x+=8){var u=x/w;p.push(x,y0+amp*Math.sin(u*6.2832*f+d.t*(1.2+i*.3))*Math.sin(u*3.1416));}
+    opL(c,p,cols[i%4],1.2);
+    var kx=((d.t*.09+i*.27)%1)*w;opC(c,kx,y0+amp*Math.sin(kx/w*6.2832*f+d.t*(1.2+i*.3))*Math.sin(kx/w*3.1416),3,OPC.W,1.2);
+    opM(c,opNm(m),4,y0-5,cols[i%4]);
+  }
 }
-var LIS=[[1,1],[9,10],[8,9],[5,6],[4,5],[3,4],[5,7],[2,3],[5,8],[3,5],[4,7],[8,15]];
-function lisRatio(semi){semi=((semi%12)+12)%12;return LIS[semi];}
-function swEll(c,x,y,rx,ry){c.beginPath();c.ellipse(x,y,Math.max(.01,rx),Math.max(.01,ry),0,0,6.2832);c.stroke();}
-var OCT_V=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]],
-    OCT_E=[[0,2],[0,3],[0,4],[0,5],[1,2],[1,3],[1,4],[1,5],[2,4],[2,5],[3,4],[3,5]];
-var SYNTH=[
-  function lissajous(c,t,n){n=n&&n.length>1?n:[48,52,55];var s=n.slice().sort(function(a,b){return a-b;}),r1=lisRatio(s[1]-s[0]),r2=lisRatio((s[2]||s[1]+7)-s[0]);
-    [[r1,PK,1],[r2,VL,.7]].forEach(function(q,qi){c.strokeStyle=q[1];c.beginPath();for(var i=0;i<=240;i++){var u=i/240*6.2832,x=26*Math.sin(q[0][0]*u+t*1.6*(qi?-1:1)+SV[0]*6.28*(qi?.5:1)),y=-26+(16+8*SV[1])*Math.sin(q[0][1]*u+SV[2]*3);if(i)c.lineTo(x,y);else c.moveTo(x,y);}c.stroke();});},
-  function ridges(c,t){var N=9,bg='rgba(20,6,15,.96)';c.lineWidth=1.4;for(var i=0;i<N;i++){var y0=-46+i*5.2,pts=[];for(var x=-34;x<=34;x+=2){var env=Math.exp(-Math.pow((x-(SV[2]-.5)*14)/(12+6*SV[3]),2)),h=env*(5+9*Math.abs(Math.sin(x*(.38+.3*SV[1])+i*1.7+SV[0]*9+t*2.2))+4*Math.sin(x*1.3-t*3+i+SV[3]*6))*(.6+.05*i);pts.push([x,y0-h*.55]);}
-    c.beginPath();c.moveTo(-34,y0+1);pts.forEach(function(p){c.lineTo(p[0],p[1]);});c.lineTo(34,y0+1);c.closePath();c.save();c.shadowBlur=0;c.fillStyle=bg;c.fill();c.restore();
-    c.strokeStyle=i%3===2?VL:PK;c.beginPath();pts.forEach(function(p,j){if(j)c.lineTo(p[0],p[1]);else c.moveTo(p[0],p[1]);});c.stroke();}},
-  function tunnel(c,t){for(var i=0;i<7;i++){var z=((t*.9+i/7)%1),sz=2+36*Math.pow(z,1.7);c.globalAlpha=Math.min(1,z*2.2)*(c.globalAlpha||1);c.strokeStyle=i%2?VL:PK;c.strokeRect(-sz+(SV[0]-.5)*10*(1-z),-26-sz*.62*(.8+.5*SV[1])+(SV[2]-.5)*8*(1-z),sz*2,sz*1.24*(.8+.5*SV[1]));}
-    c.globalAlpha=1;c.strokeStyle=VL;[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(d){swL(c,[d[0]*3,-26+d[1]*2,d[0]*38,-26+d[1]*24]);});},
-  function globe(c,t){var r=22,cy=-26;c.save();c.translate(0,cy);c.rotate((SV[0]-.5)*1.3);c.translate(0,-cy);c.strokeStyle=PK;swEll(c,0,cy,r,r);for(var m=0;m<6;m++){var a=t*(1+SV[2]*.7)+SV[3]*3+m*Math.PI/6;c.strokeStyle=m%2?VL:PK;swEll(c,0,cy,r*Math.abs(Math.cos(a)),r);}
-    c.strokeStyle=VL;[-.6,0,.6].forEach(function(l){var rx=r*Math.cos(l);swEll(c,0,cy+r*Math.sin(l),rx,rx*(.08+.3*SV[1]));});c.restore();},
-  function octa(c,t){swWire(c,OCT_V,OCT_E,t*1.8*(.7+SV[1]*.8)+SV[3]*6,-26,22,.2+SV[0]*1.0);c.globalAlpha=(c.globalAlpha||1)*.7;swWire(c,OCT_V,OCT_E,-t*1.1+SV[2]*6,-26,11,.9+SV[0]*.5);},
-  function radial(c,t){var n=36,r0=9+SV[1]*5,cy=-26;for(var i=0;i<n;i++){var a=i/n*6.2832-1.5708+SV[2]*3,v=0;
-      if(fBuf&&fBuf.length){var k=1+Math.floor(i%(n/2)*(fBuf.length*.35)/(n/2));v=fBuf[k]/255;}
-      v=Math.max(v,.28+.22*Math.sin(t*6+i*(.5+.4*SV[0])+SV[3]*6));
-      var r1=r0+v*17;c.strokeStyle=i%4===0?VL:PK;swL(c,[Math.cos(a)*r0,cy+Math.sin(a)*r0,Math.cos(a)*r1,cy+Math.sin(a)*r1]);}
-    c.strokeStyle=PK;swEll(c,0,cy,r0-2,r0-2);},
-  function torus(c,t){var R=13+SV[1]*5,rr=5+SV[2]*4,cy=-26,tt2=t*1.4*(.7+SV[3]*.7),cyaw=Math.cos(tt2),syaw=Math.sin(tt2),tl=.5+SV[0]*1.2,ct=Math.cos(tl),st=Math.sin(tl);
-    function P(u,v){var x=(R+rr*Math.cos(v))*Math.cos(u),y=rr*Math.sin(v),z=(R+rr*Math.cos(v))*Math.sin(u),X=x*cyaw+z*syaw,Z=-x*syaw+z*cyaw,Y=y*ct-Z*st;return [X,cy+Y];}
-    for(var i=0;i<12;i++){c.strokeStyle=i%2?VL:PK;c.beginPath();for(var j=0;j<=16;j++){var p=P(i/12*6.2832,j/16*6.2832);if(j)c.lineTo(p[0],p[1]);else c.moveTo(p[0],p[1]);}c.stroke();}
-    c.strokeStyle=PK;for(var q=0;q<4;q++){c.beginPath();for(var j2=0;j2<=36;j2++){var p2=P(j2/36*6.2832,q/4*6.2832);if(j2)c.lineTo(p2[0],p2[1]);else c.moveTo(p2[0],p2[1]);}c.stroke();}}
-];
+/* 1 ORBIT: circle of fifths, the chord is a polygon, the previous chord stays as a dim ghost */
+function poly(c,nt,cx,cy,R,col,lw){
+  var pcs=[],pts=[];nt.forEach(function(m){var k=FIF(((m%12)+12)%12);if(pcs.indexOf(k)<0)pcs.push(k);});
+  pcs.sort(function(x,y){return x-y;});
+  pcs.forEach(function(k){var a=k*Math.PI/6-Math.PI/2;pts.push(cx+Math.cos(a)*R,cy+Math.sin(a)*R);});
+  if(pts.length>=4)opL(c,pts,col,lw,true);return pts;
+}
+function scOrbit(c,w,h,d){
+  var cx=w/2,cy=h/2,R=Math.min(w,h)*(w<130?.44:.36),k,a;
+  opC(c,cx,cy,R,OPC.D,1);
+  for(k=0;k<12;k++){a=k*Math.PI/6-Math.PI/2;opL(c,[cx+Math.cos(a)*R*.94,cy+Math.sin(a)*R*.94,cx+Math.cos(a)*R*1.06,cy+Math.sin(a)*R*1.06],OPC.D,1);
+    opM(c,NOTE[(k*7)%12].replace('#','♯'),cx+Math.cos(a)*R*1.26,cy+Math.sin(a)*R*1.26+3,OPC.D,'center');}
+  if(d.prev)poly(c,d.prev,cx,cy,R,OPC.B,1);
+  var pts=poly(c,d.nt,cx,cy,R,OPC.G,1.5),i;
+  for(i=0;i<pts.length;i+=2){opC(c,pts[i],pts[i+1],3.2+3*d.pulse,OPC.W,1.3);}
+  opC(c,cx,cy,1.8,OPC.P,1.4);
+}
+/* 3 ARCS: the intervals of the chord as bridges over a semitone ruler */
+function scArcs(c,w,h,d){
+  var lo=d.nt[0],sp=Math.max(12,d.nt[d.nt.length-1]-lo),x0=w*.06,pw=w*.88,y=h*.62,i,k,cols=[OPC.G,OPC.B,OPC.R,OPC.P];
+  var X=function(s){return x0+s/sp*pw;};
+  opL(c,[x0,y,x0+pw,y],OPC.D,1);for(k=0;k<=sp;k++)opL(c,[X(k),y,X(k),y+(k%12===0?8:4)],OPC.D,1);
+  for(i=0;i<d.nt.length;i++){
+    var s=d.nt[i]-lo,xs=X(s);opC(c,xs,y,3.2+2*d.pulse,OPC.W,1.3);opM(c,opNm(d.nt[i]),xs,y+22,OPC.P,'center');
+    if(i){var s0=d.nt[i-1]-lo,xm=(X(s0)+xs)/2,rr=(xs-X(s0))/2,col=cols[(i-1)%4];
+      c.strokeStyle=col;c.lineWidth=1.3;c.beginPath();c.ellipse(xm,y,rr,Math.min(h*.4,rr*(.9+.25*d.pulse)),0,Math.PI,0);c.stroke();
+      opT(c,''+(s-s0),xm,y-Math.min(h*.4,rr*.9)-6,h*.1,col,200,'center');}
+  }
+}
+/* 4 LEAD: voice leading; each note of the new chord is joined to the nearest note of the previous one */
+function scLead(c,w,h,d){
+  var A=d.prev||d.nt,B=d.nt,xa=w*.22,xb=w*.78,all=A.concat(B),lo=Math.min.apply(null,all)-4,hi=Math.max.apply(null,all)+4,
+      py=function(m){return h*.9-(m-lo)/Math.max(12,hi-lo)*h*.8;},cols=[OPC.P,OPC.G,OPC.R,OPC.W],t=Math.min(1,d.age/500),e=t*t*(3-2*t);
+  opL(c,[xa,h*.08,xa,h*.92],OPC.D,1);opL(c,[xb,h*.08,xb,h*.92],OPC.D,1);
+  A.forEach(function(m){opC(c,xa,py(m),3,OPC.B,1.2);opM(c,opNm(m),xa-9,py(m)+3,OPC.B,'right');});
+  B.forEach(function(m,j){
+    var a=A[0],k;for(k=0;k<A.length;k++)if(Math.abs(A[k]-m)<Math.abs(a-m))a=A[k];
+    var ya=py(a),yb=py(m),mx=xa+(xb-xa)*e,my=ya+(yb-ya)*e;
+    c.strokeStyle=cols[j%4];c.lineWidth=1.4;c.beginPath();c.moveTo(xa,ya);c.bezierCurveTo(xa+(mx-xa)*.5,ya,xa+(mx-xa)*.5,my,mx,my);c.stroke();
+    if(e>.98){opC(c,xb,yb,3+2*d.pulse,OPC.W,1.3);opM(c,opNm(m),xb+9,yb+3,cols[j%4]);}
+  });
+}
+/* 5 BLOOM: twelve petals, long where the pitch class rings; chord petals are outlined bright */
+function scBloom(c,w,h,d){
+  var cx=w/2,cy=h/2,R=Math.min(w,h)*.44,k,act={};
+  d.nt.forEach(function(m){act[((m%12)+12)%12]=1;});
+  for(k=0;k<12;k++){
+    var a=k*Math.PI/6-Math.PI/2+d.t*.06,on=!!act[k],L=R*(.22+.6*d.pc[k]+(on?.22+.1*d.pulse:0)),wd=R*.14,ca=Math.cos(a),sa=Math.sin(a),px=-sa,py=ca;
+    c.strokeStyle=on?OPC.G:OPC.D;c.lineWidth=on?1.4:1;c.beginPath();c.moveTo(cx,cy);
+    c.quadraticCurveTo(cx+ca*L*.5+px*wd,cy+sa*L*.5+py*wd,cx+ca*L,cy+sa*L);c.quadraticCurveTo(cx+ca*L*.5-px*wd,cy+sa*L*.5-py*wd,cx,cy);c.stroke();
+    if(on){opC(c,cx+ca*L,cy+sa*L,2.6,OPC.W,1.2);opM(c,NOTE[k].replace('#','♯'),cx+ca*(L+10),cy+sa*(L+10)+3,OPC.P,'center');}
+  }
+  opC(c,cx,cy,R*.06,OPC.R,1.3);
+}
+/* 6 RATIOS: each interval of the chord as the Lissajous figure of its frequency ratio */
+function scRatio(c,w,h,d){
+  var n=Math.min(3,d.nt.length-1),i,j,cols=[OPC.G,OPC.B,OPC.R],cw=w/n,s=Math.min(cw*.4,h*.32);
+  for(i=0;i<n;i++){
+    var sm=(d.nt[i+1]-d.nt[0]+120)%12,ra=LISR[sm],cx=cw*(i+.5),cy=h*.46,p=[];
+    for(j=0;j<=180;j++){var u=j/180*6.2832;p.push(cx+s*Math.sin(ra[0]*u+d.t*.7),cy+s*(.92+.08*d.pulse)*Math.sin(ra[1]*u));}
+    opL(c,p,cols[i],1.1);opM(c,ra[0]+':'+ra[1],cx,h*.9,cols[i],'center');
+  }
+}
+var SCN=[scBreath,scOrbit,scThreads,scArcs,scLead,scBloom,scRatio];
 function critDraw(){
+  if(!crit.on)return;
+  var now=performance.now();
+  if(now-crit.fa<[33,50,66][crit.q])return; /* 30 fps, stepping down to 20 / 15 fps if this device is slow */
+  crit.fa=now;
   var cv=crit.cv;
   if(!cv){cv=document.getElementById('crit');if(!cv)return;crit.cv=cv;crit.cx=cv.getContext('2d');}
-  var L=crit.list;
-  if(!L.length&&!crit.dirty)return;
-  var dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth,h=cv.clientHeight;
+  var dpr=crit.q?1:Math.min(1.5,window.devicePixelRatio||1),w=cv.clientWidth,h=cv.clientHeight;
   if(!w||!h)return;
   if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
-  var c=crit.cx;c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
-  var now=performance.now();crit.dirty=false;
-  crit.list=L.filter(function(o){return now-o.born<o.life;});
-  crit.list.forEach(function(o){
-    var age=now-o.born,a=Math.min(1,age/70,(o.life-age)/400);
-    if(crit.set===1){var k=Math.max(.6,Math.min(2.4,h*.84/52,w*.9/80))*(.9+.1*o.v),tt=age/1000+o.ph*.3;
-      var xx=w/2;
-      c.save();c.translate(xx,Math.round(h/2+25*k));c.scale(k,k);c.globalAlpha=a;
-      var nn=o.notes&&o.notes.length?o.notes.slice().sort(function(x,y){return x-y;}):[48],rt=((nn[0]%12)+12)%12,minor=nn.length>1&&((nn[1]-nn[0])%12===3||(nn[1]-nn[0])%12===2),vv=Math.max(0,Math.min(1,o.vel||.8)),
-          h1=(200+rt*(150/11)+(nn.length>3?15:0))%360,h2=(h1+(minor?-95:-55)+360)%360,lt=62+vv*14;
-      PK='hsl('+h1.toFixed(0)+',100%,'+lt.toFixed(0)+'%)';VL='hsl('+h2.toFixed(0)+',95%,'+(lt-4).toFixed(0)+'%)';SV=o.sv||SV;
-      c.lineWidth=(1.3+vv*2.2)/k;c.lineCap='round';c.lineJoin='round';c.strokeStyle=PK;c.fillStyle=PK;c.shadowColor='hsla('+h1.toFixed(0)+',100%,60%,.95)';c.shadowBlur=6+vv*10;
-      /* laser stroke: every line draws itself in, with a hot head that cools to the chord colour */
-      var dp=Math.min(1,age/(LZ+120*(1-vv)));
-      if(dp<1){var e=dp*dp*(3-2*dp),hot=1-dp;
-        c.setLineDash([e*300,4000]);c.lineWidth*=1+.35*hot;c.shadowBlur*=1+.5*hot;
-        var hl='hsl('+h1.toFixed(0)+',100%,'+(lt+(96-lt)*hot).toFixed(0)+'%)';c.strokeStyle=hl;
-        var keepPK=PK;PK=hl;SYNTH[o.type](c,tt,o.notes);PK=keepPK;c.setLineDash([]);c.restore();return;}
-      SYNTH[o.type](c,tt,o.notes);c.restore();return;}
-    var P=Math.max(3,Math.round(h*.46/11*(.85+.2*o.v))),q=Math.floor(age/150)%4,f=q%2;
-    var moving=(o.type===0||o.type===4||o.type===6);
-    var x=o.x+(moving?o.dir*age*.04:0);
-    var m=8*P;if(x<m)x=m;if(x>w-m)x=w-m;x=Math.round(x/P)*P;
-    var ground=Math.round((h-6)/P)*P;
-    var fy=(o.type===1)?-Math.round(h*.18/P)*P:0;
-    if(o.type===1)fy-=(Math.floor(age/300)%2)*P;
-    c.save();c.translate(x,ground+fy);c.scale(o.type===5||o.type===2||o.type===3?1:o.dir,1);c.globalAlpha=a;
-    var R=function(px,py,pw,ph){c.fillRect((px-7)*P,(py-11)*P,pw*P,ph*P);};
-    var D=function(px,py,pw,ph){c.save();c.shadowBlur=0;c.fillStyle='#14050E';c.fillRect((px-7)*P,(py-11)*P,(pw||1)*P,(ph||1)*P);c.restore();};
-    c.fillStyle='#FF6FB5';c.shadowColor='rgba(255,79,163,.9)';c.shadowBlur=8;
-    CRITS[o.type](R,D,f,q);c.restore();
-  });
-  if(!crit.list.length){c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);crit.dirty=false;}
+  var c=crit.cx;c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);c.lineCap='round';c.lineJoin='round';
+  var live=!!an2,t=now/1000;
+  if(live)an2.getByteFrequencyData(fBuf);
+  var sr=ctx?ctx.sampleRate:44100,nb=fBuf?fBuf.length:2048,F0=55,F1=8000,ratio=Math.log(F1/F0),i,b;
+  for(i=0;i<SPN;i++){
+    var v=0;
+    if(live){var b0=Math.floor(F0*Math.exp(i/SPN*ratio)*2*nb/sr),b1=Math.max(b0+1,Math.floor(F0*Math.exp((i+1)/SPN*ratio)*2*nb/sr));for(b=b0;b<b1&&b<nb;b++)if(fBuf[b]>v)v=fBuf[b];v/=255;}
+    else v=CRIT_RM?.05:.05+.03*Math.sin(i*.55+t*1.6);
+    SPV[i]=Math.max(v,(SPV[i]||0)*.86);
+  }
+  function band(a,z){var s=0;for(var k=a;k<z;k++)s+=SPV[k];return Math.min(1,s/(z-a)*1.6);}
+  var pc=[0,0,0,0,0,0,0,0,0,0,0,0];
+  if(live){var lo=Math.floor(65*2*nb/sr),hi=Math.min(nb-1,Math.floor(2100*2*nb/sr));
+    for(b=lo;b<=hi;b++){var f=b*sr/(2*nb),m=69+12*Math.log(f/440)/Math.LN2,r=Math.round(m);if(Math.abs(m-r)>.42)continue;var k2=((r%12)+12)%12,vv=fBuf[b]/255;if(vv>pc[k2])pc[k2]=vv;}}
+  if(crit.src!==curNotes){crit.src=curNotes;crit.nt=(curNotes&&curNotes.length?curNotes.slice():[48,52,55]).sort(function(x,y){return x-y;});}
+  var nt=crit.nt;
+  var age=now-crit.hit;
+  if(age>9000)crit.sc=Math.floor(now/9000)%7; /* nobody playing: the display wanders through its scenes */
+  
+  var key=nt.join();if(key!==crit.key){crit.key=key;crit.prev=crit.cur;crit.cur=nt;}
+    var d={prev:crit.prev,t:t,age:age,vel:crit.hv,pulse:Math.max(0,1-age/420)*crit.hv,nt:nt,pc:pc,lo:band(0,20),mi:band(20,42),hi:band(42,64)};
+  var sc=crit.sc;if(sc!==crit.last){crit.last=sc;crit.t0=now;}
+  c.globalAlpha=Math.min(1,(now-crit.t0)/260);
+  SCN[sc](c,w,h,d);
+  c.globalAlpha=1;
+  /* self-tuning: if drawing costs too much on this phone, drop the frame rate and resolution */
+  crit.ms=crit.ms*.92+(performance.now()-now)*.08;
+  if(++crit.nf>45&&crit.ms>4&&crit.q<2){crit.q++;crit.nf=0;crit.ms=0;}
 }
 var waveC=null,waveX=null,lastBeat=-1,beatEls=[],vizMode=2,curNotes=[];
 var VIZ=['WAVE','SPECTRUM','NOTES'],spk=[],chr=[0,0,0,0,0,0,0,0,0,0,0,0];
@@ -222,7 +261,9 @@ function buildVu(){
   waveC.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();cycle();}});
   drawViz();
 }
-function meterLoop(){drawViz();critDraw();requestAnimationFrame(meterLoop);}
+function meterLoop(){meterLoop.on=true;if(!crit.on)drawViz();critDraw();requestAnimationFrame(meterLoop);}
+/* before the audio engine starts (first tap) only the display scenes idle */
+(function pre(){if(meterLoop.on)return;critDraw();requestAnimationFrame(pre);})();
 function buildBeats(){
   var box=$('#beats');box.innerHTML='';beatEls=[];lastBeat=-1;
   for(var i=0;i<16;i++){var e=document.createElement('i');if(i%4===0)e.className='dn';box.appendChild(e);beatEls.push(e);}
