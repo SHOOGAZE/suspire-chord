@@ -115,9 +115,9 @@
           <div class="fader"><label for="vox">Voicing</label><input type="range" id="vox" min="-3" max="3" step="1" value="0"><output id="voxOut">Root</output></div>
           <div class="fader"><label for="bassLvl">Bass</label><input type="range" id="bassLvl" min="0" max="1" step=".01" value=".8"><output id="bassLvlOut">80%</output></div>
           <details class="feel"><summary>Feel</summary>
+            <button class="chip small" id="critBtn" aria-pressed="true" title="Animated scenes on the display when you play">Display: Synthwave</button>
             <div class="fader"><label for="swing">Swing</label><input type="range" id="swing" min="0" max="1" step=".01" value="0"><output id="swingOut">0%</output></div>
             <div class="fader"><label for="human">Human</label><input type="range" id="human" min="0" max="1" step=".01" value="0"><output id="humanOut">0%</output></div>
-            <button class="chip small" id="critBtn" aria-pressed="true" title="Display page: chords or the line-art scenes">Display: Lines</button>
           </details>
         </div>
       </section>
@@ -173,8 +173,8 @@
         <div class="vibes" id="vibes" role="group" aria-label="Vibe"></div>
         <div class="insts" id="insts"></div>
         <div class="sampler">
-          <label class="chip small" for="sampleFile">Load sample</label>
-          <input type="file" id="sampleFile" accept="audio/*" style="position:absolute;opacity:0;width:1px;height:1px">
+          <button type="button" class="chip small" id="sampleBtn">Load sample</button>
+          <input type="file" id="sampleFile" accept="audio/*,.wav,.mp3,.m4a,.aif,.aiff,.caf,.ogg" tabindex="-1" aria-hidden="true" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0">
           <span class="label">C =</span>
           <select id="sampleRoot" aria-label="Pitch of C"><option value="36">C2</option><option value="48">C3</option><option value="60" selected>C4</option><option value="72">C5</option></select>
           <span class="file" id="sampleName">No sample yet.</span>

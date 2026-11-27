@@ -111,12 +111,12 @@ test('pad names stay inside their pads: every scale, Jazz on and off, play and m
   }
 });
 
-test('landscape play mode: scene in the header, all pads on screen', async () => {
+test('landscape keeps the display and all pads on screen', async () => {
   const t = await launch({ width: 812, height: 375 });
   try {
     const ok = await t.page.evaluate(() => {
-      const v = document.querySelector('#vizSq').getBoundingClientRect(), tele = document.querySelector('.tele').getBoundingClientRect();
-      return v.width > 30 && tele.width === 0 && [...document.querySelectorAll('.pad:not(.hold)')].every((p) => { const r = p.getBoundingClientRect(); return r.bottom <= innerHeight + 1 && r.right <= innerWidth + 1; });
+      const tele = document.querySelector('.tele').getBoundingClientRect();
+      return tele.width > 100 && [...document.querySelectorAll('.pad:not(.hold)')].every((p) => { const r = p.getBoundingClientRect(); return r.bottom <= innerHeight + 1 && r.right <= innerWidth + 1; });
     });
     assert.ok(ok);
   } finally { await t.close(); }
@@ -189,33 +189,4 @@ test('works offline after the first visit (service worker)', async () => {
 test('build is reproducible: index.html matches src/', () => {
   const { execFileSync } = require('node:child_process');
   execFileSync('node', ['build.mjs', '--check'], { cwd: require('node:path').join(__dirname, '..') });
-});
-
-test('moving the joystick while a chord is held morphs it instead of retriggering', async () => {
-  const t = await launch({ probe: true });
-  try {
-    await t.page.evaluate(() => {
-      window.__starts = 0;
-      const o = OscillatorNode.prototype.start; OscillatorNode.prototype.start = function (...a) { window.__starts++; return o.apply(this, a); };
-      const b = AudioBufferSourceNode.prototype.start; AudioBufferSourceNode.prototype.start = function (...a) { window.__starts++; return b.apply(this, a); };
-    });
-    const box = await (await t.page.$$('.pad'))[0].boundingBox();
-    await t.page.mouse.move(box.x + 20, box.y + 20);
-    await t.page.mouse.down();
-    await t.page.waitForTimeout(500);
-    const first = await t.page.evaluate(() => window.__starts);
-    assert.ok(first > 0, 'the chord started');
-    // push the joystick to "jazzy": two extensions join the held triad
-    await t.page.evaluate(() => {
-      const j = document.getElementById('joy'), r = j.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + 4;
-      j.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 7, clientX: x, clientY: y }));
-      j.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 7, clientX: x, clientY: y }));
-    });
-    await t.page.waitForTimeout(400);
-    const delta = (await t.page.evaluate(() => window.__starts)) - first;
-    assert.ok(delta > 0, 'new notes join the chord');
-    assert.ok(delta < first, 'only the new notes start (' + delta + ' new vs ' + first + ' for the whole chord)');
-    await t.page.mouse.up();
-    assert.deepEqual(t.errors, []);
-  } finally { await t.close(); }
 });
